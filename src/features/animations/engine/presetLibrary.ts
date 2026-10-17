@@ -1,0 +1,102 @@
+import { AnimationConfig, AnimationPresetId } from '@/types';
+
+export const PRESET_LIBRARY: Record<AnimationPresetId, AnimationConfig> = {
+  'envelope-reveal': {
+    version: 1,
+    preset: 'envelope-reveal',
+    intensity: 'balanced',
+    interaction: 'tap-to-open',
+    enableParticles: true,
+    particleType: 'gold-dust',
+    particleCount: 22,
+    allowReplay: true,
+    reducedMotionFallback: true,
+    musicAutoStartOnInteraction: true,
+    steps: [
+      { id: 'seal', target: 'waxSeal', trigger: 'onUserAction', effect: 'zoomIn', durationMs: 400 },
+      { id: 'flap', target: 'envelopeFlap', trigger: 'onStepComplete', effect: 'envelopeFold', durationMs: 650 },
+      { id: 'card', target: 'invitationCard', trigger: 'onStepComplete', effect: 'slideUp', durationMs: 800 },
+      { id: 'text', target: 'eventDetails', trigger: 'onStepComplete', effect: 'fadeUp', durationMs: 600 },
+    ],
+  },
+  'royal-curtain-doors': {
+    version: 1,
+    preset: 'royal-curtain-doors',
+    intensity: 'balanced',
+    interaction: 'tap-to-open',
+    enableParticles: true,
+    particleType: 'gold-dust',
+    particleCount: 28,
+    allowReplay: true,
+    reducedMotionFallback: true,
+    musicAutoStartOnInteraction: true,
+    steps: [
+      { id: 'doors', target: 'palaceDoors', trigger: 'onUserAction', effect: 'doorPart', durationMs: 1100 },
+      { id: 'card', target: 'invitationCard', trigger: 'onStepComplete', effect: 'zoomIn', durationMs: 750 },
+      { id: 'text', target: 'eventDetails', trigger: 'onStepComplete', effect: 'fadeUp', durationMs: 600 },
+    ],
+  },
+  'botanical-bloom': {
+    version: 1,
+    preset: 'botanical-bloom',
+    intensity: 'balanced',
+    interaction: 'auto-open',
+    enableParticles: true,
+    particleType: 'rose-petals',
+    particleCount: 20,
+    allowReplay: true,
+    reducedMotionFallback: true,
+    musicAutoStartOnInteraction: true,
+    steps: [
+      { id: 'vines', target: 'vinesPath', trigger: 'onMount', effect: 'fadeIn', durationMs: 900 },
+      { id: 'card', target: 'invitationCard', trigger: 'onStepComplete', effect: 'fadeIn', durationMs: 750 },
+      { id: 'text', target: 'eventDetails', trigger: 'onStepComplete', effect: 'fadeUp', durationMs: 500 },
+    ],
+  },
+  'celebration-pop': {
+    version: 1,
+    preset: 'celebration-pop',
+    intensity: 'expressive',
+    interaction: 'tap-to-open',
+    enableParticles: true,
+    particleType: 'confetti',
+    particleCount: 40,
+    allowReplay: true,
+    reducedMotionFallback: true,
+    musicAutoStartOnInteraction: true,
+    steps: [
+      { id: 'pop', target: 'giftBox', trigger: 'onUserAction', effect: 'particleBurst', durationMs: 500 },
+      { id: 'card', target: 'invitationCard', trigger: 'onStepComplete', effect: 'slideUp', durationMs: 700 },
+      { id: 'text', target: 'eventDetails', trigger: 'onStepComplete', effect: 'fadeUp', durationMs: 500 },
+    ],
+  },
+  'modern-cinematic': {
+    version: 1,
+    preset: 'modern-cinematic',
+    intensity: 'subtle',
+    interaction: 'auto-open',
+    enableParticles: false,
+    allowReplay: true,
+    reducedMotionFallback: true,
+    musicAutoStartOnInteraction: false,
+    steps: [
+      { id: 'hero', target: 'heroMask', trigger: 'onMount', effect: 'fadeIn', durationMs: 800 },
+      { id: 'card', target: 'invitationCard', trigger: 'onStepComplete', effect: 'fadeUp', durationMs: 600 },
+    ],
+  },
+  'none': {
+    version: 1,
+    preset: 'none',
+    intensity: 'subtle',
+    interaction: 'auto-open',
+    enableParticles: false,
+    allowReplay: false,
+    reducedMotionFallback: true,
+    musicAutoStartOnInteraction: false,
+    steps: [],
+  },
+};
+
+export function getDefaultAnimationConfig(presetId: AnimationPresetId): AnimationConfig {
+  return PRESET_LIBRARY[presetId] || PRESET_LIBRARY['envelope-reveal'];
+}
