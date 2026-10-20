@@ -92,11 +92,31 @@ export const Footer: React.FC = () => {
             <Heart className="h-3.5 w-3.5 text-royal-ruby fill-royal-ruby" />
             <span>for life&apos;s grand celebrations</span>
           </div>
+          <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-3 text-xs text-gray-400 font-sans">
+            <Link href="/privacy" className="hover:text-royal-champagne transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-white/20">•</span>
+            <Link href="/terms" className="hover:text-royal-champagne transition-colors">
+              Terms &amp; Conditions
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl mt-8 pt-6 border-t border-white/10 text-center text-xs text-gray-500 font-sans">
-        &copy; {new Date().getFullYear()} InvitedYou. All rights reserved.
+      <div className="mx-auto max-w-7xl mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 font-sans text-center sm:text-left">
+        <div>
+          &copy; {new Date().getFullYear()} InvitedYou. All rights reserved.
+        </div>
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Link href="/privacy" className="hover:text-royal-champagne transition-colors">
+            Privacy Policy
+          </Link>
+          <span className="text-white/20">•</span>
+          <Link href="/terms" className="hover:text-royal-champagne transition-colors">
+            Terms &amp; Conditions
+          </Link>
+        </div>
       </div>
     </footer>
   );

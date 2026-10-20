@@ -151,6 +151,18 @@ function RegisterContent() {
             <span>{loading ? 'Creating account...' : 'Create Account'}</span>
             <ArrowRight className="h-4 w-4" />
           </button>
+
+          <p className="text-[11px] text-gray-400 text-center font-sans leading-relaxed pt-1">
+            By signing up, you agree to our{' '}
+            <Link href="/terms" className="text-royal-champagne underline hover:text-white">
+              Terms &amp; Conditions
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-royal-champagne underline hover:text-white">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </form>
 
         <div className="text-center pt-2 border-t border-white/10 text-xs text-gray-400 font-sans">
