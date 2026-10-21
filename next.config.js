@@ -7,7 +7,7 @@ const BACKEND_URL =
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["localhost", "images.unsplash.com"],
+    domains: ["localhost", "images.unsplash.com", "invetedyoubackend.onrender.com"],
   },
   async rewrites() {
     return [
