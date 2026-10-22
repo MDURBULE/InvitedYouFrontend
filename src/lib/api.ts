@@ -5,8 +5,22 @@ import {
   TemplateResponse,
 } from '@/types';
 
-const rawApiBase = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
-const API_BASE = rawApiBase.endsWith('/') ? rawApiBase.slice(0, -1) : rawApiBase;
+function resolveApiBase(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl && envUrl.startsWith('http')) {
+    return envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+  }
+  if (typeof window !== 'undefined') {
+    // Hosted environments like Netlify should communicate directly with the Render backend
+    if (window.location.hostname.includes('netlify.app') || window.location.hostname.includes('invitedyou.com')) {
+      return 'https://invetedyoubackend.onrender.com/api/v1';
+    }
+  }
+  const fallback = envUrl || 'https://invetedyoubackend.onrender.com/api/v1';
+  return fallback.endsWith('/') ? fallback.slice(0, -1) : fallback;
+}
+
+const API_BASE = resolveApiBase();
 
 export class ApiError extends Error {
   status: number;
