@@ -126,13 +126,13 @@ function InvitationEditorContent() {
         }
       };
 
-      // Check if it matches any curated template by id or slug
+      // Check if it matches any curated template by id
       const curated = CURATED_TEMPLATES.find(
-        (t) => String(t.id) === String(templateIdParam) || t.slug === String(templateIdParam)
+        (t) => String(t.id) === String(templateIdParam)
       );
       if (curated) {
         setTemplate(curated);
-        const cat = curated.category || curated.eventCategory || 'WEDDING';
+        const cat = (curated.category as string) || 'WEDDING';
         setEventCategory(cat);
         applySampleDetails(cat);
         if (curated.defaultAnimationConfig) {
@@ -151,7 +151,7 @@ function InvitationEditorContent() {
       try {
         const tmpl = await templatesApi.getTemplateById(templateIdParam);
         setTemplate(tmpl);
-        const cat = tmpl.category || tmpl.eventCategory || 'WEDDING';
+        const cat = (tmpl.category as string) || 'WEDDING';
         setEventCategory(cat);
         applySampleDetails(cat);
         if (tmpl.defaultAnimationConfig) {
@@ -169,7 +169,7 @@ function InvitationEditorContent() {
         const fallback = CURATED_TEMPLATES[0];
         if (fallback) {
           setTemplate(fallback);
-          const cat = fallback.category || fallback.eventCategory || 'WEDDING';
+          const cat = (fallback.category as string) || 'WEDDING';
           setEventCategory(cat);
           applySampleDetails(cat);
           if (fallback.defaultAnimationConfig) {

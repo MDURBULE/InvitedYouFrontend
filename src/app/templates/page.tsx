@@ -53,6 +53,7 @@ function TemplateGalleryContent() {
       try {
         const data = await templatesApi.getTemplates({});
         if (data && data.length > 0) {
+          const idMap = new Map<string, TemplateResponse>();
           // Add backend templates first
           data.forEach((t) => idMap.set(t.id, t));
           // Overlay curated templates so high-resolution thumbnails and rich configs take precedence
