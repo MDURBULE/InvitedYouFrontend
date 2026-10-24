@@ -44,28 +44,49 @@ function TemplateGalleryContent() {
   const [styleTag, setStyleTag] = useState<string>(searchParams.get('styleTag') || 'ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const [allTemplates, setAllTemplates] = useState<TemplateResponse[]>(CURATED_TEMPLATES);
-  const [loading, setLoading] = useState(false);
+  const [allTemplates, setAllTemplates] = useState<TemplateResponse[]>([]);
+  const [loading, setLoading] = useState(true);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateResponse | null>(null);
 
   useEffect(() => {
     async function loadTemplates() {
+      setLoading(true);
       try {
         const data = await templatesApi.getTemplates({});
         if (data && data.length > 0) {
-          const idMap = new Map<string, TemplateResponse>();
-          // Add backend templates first
-          data.forEach((t) => idMap.set(t.id, t));
-          // Overlay curated templates so high-resolution thumbnails and rich configs take precedence
-          CURATED_TEMPLATES.forEach((t) => {
-            const backend = idMap.get(t.id);
-            idMap.set(t.id, backend ? { ...backend, ...t } : t);
+          // Backend is the source of truth — enrich with curated thumbnail/config only if backend value is missing/local
+          const enriched = data.map((t) => {
+            const curated = CURATED_TEMPLATES.find((c) => c.id === t.id);
+            if (!curated) return t;
+            return {
+              ...t,
+              // Use curated thumbnail only if backend thumbnail is missing or points to a local path
+              thumbnailUrl:
+                !t.thumbnailUrl || t.thumbnailUrl.startsWith('/')
+                  ? curated.thumbnailUrl
+                  : t.thumbnailUrl,
+              // Use curated animation/design config if backend stores empty JSON
+              defaultAnimationConfig:
+                !t.defaultAnimationConfig || t.defaultAnimationConfig === '{}'
+                  ? curated.defaultAnimationConfig
+                  : t.defaultAnimationConfig,
+              defaultDesignConfig:
+                !t.defaultDesignConfig || t.defaultDesignConfig === '{}'
+                  ? curated.defaultDesignConfig
+                  : t.defaultDesignConfig,
+            };
           });
-          setAllTemplates(Array.from(idMap.values()));
+          setAllTemplates(enriched);
+        } else {
+          // Backend returned 0 templates — fall back to curated (run seed_templates.sql first)
+          console.warn('[InvitedYou] Backend returned 0 templates — using curated fallback. Run seed_templates.sql to populate.');
+          setAllTemplates(CURATED_TEMPLATES);
         }
       } catch (e) {
-        // Fallback to curated templates
+        console.error('[InvitedYou] Failed to load templates from backend:', e);
         setAllTemplates(CURATED_TEMPLATES);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -226,9 +247,13 @@ function TemplateGalleryContent() {
         </div>
       </div>
 
-      {/* Templates Count and Grid */}
+      {/* Templates Count */}
       <div className="flex items-center justify-between text-xs text-gray-400 px-1">
-        <span>Showing {filteredTemplates.length} celebration suites</span>
+        <span>
+          {loading
+            ? 'Loading celebration suites from database...'
+            : `Showing ${filteredTemplates.length} celebration suite${filteredTemplates.length !== 1 ? 's' : ''}`}
+        </span>
         {(category !== 'ALL' || templateType !== 'ALL' || styleTag !== 'ALL' || searchQuery) && (
           <button
             type="button"
@@ -245,7 +270,26 @@ function TemplateGalleryContent() {
         )}
       </div>
 
-      {filteredTemplates.length === 0 ? (
+      {/* Loading Skeleton */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-3xl border border-white/10 bg-royal-dark/60 overflow-hidden animate-pulse">
+              <div className="aspect-[4/3] w-full bg-white/5" />
+              <div className="p-5 space-y-3">
+                <div className="h-3 w-20 bg-white/10 rounded-full" />
+                <div className="h-5 w-3/4 bg-white/10 rounded-full" />
+                <div className="h-3 w-full bg-white/5 rounded-full" />
+                <div className="h-3 w-2/3 bg-white/5 rounded-full" />
+                <div className="flex gap-2 pt-2">
+                  <div className="h-9 flex-1 bg-white/10 rounded-xl" />
+                  <div className="h-9 flex-1 bg-royal-gold/20 rounded-xl" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredTemplates.length === 0 ? (
         <div className="rounded-3xl border border-white/10 bg-white/5 py-16 text-center space-y-3">
           <p className="font-serif text-lg text-white">No templates match the selected filters.</p>
           <button
