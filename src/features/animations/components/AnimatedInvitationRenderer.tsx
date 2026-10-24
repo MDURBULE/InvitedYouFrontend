@@ -240,12 +240,36 @@ export const AnimatedInvitationRenderer: React.FC<AnimatedInvitationRendererProp
                   borderColor: `${design.secondaryColor || '#D4AF37'}55`,
                 }}
               >
+                {/* Event Completed / Concluded Keepsake Banner */}
+                {eventDate && new Date(eventDate).getTime() < Date.now() && (
+                  <div className="mb-4 sm:mb-5 rounded-2xl border border-amber-500/40 bg-amber-500/15 py-2.5 px-4 text-center">
+                    <p className="font-serif text-xs sm:text-sm font-bold text-amber-300 flex items-center justify-center gap-2 tracking-wider">
+                      <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                      <span>Event Completed • Celebration Concluded</span>
+                      <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                    </p>
+                    <p className="text-[11px] text-gray-300 font-sans mt-0.5">
+                      This invitation is preserved as a cherished celebration keepsake.
+                    </p>
+                  </div>
+                )}
+
                 {/* Traditional Arch Filigree */}
                 <div className="mx-auto mb-3 sm:mb-4 flex items-center justify-center gap-2 sm:gap-3 text-royal-champagne opacity-80">
                   <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-royal-gold" />
                   <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-royal-gold animate-pulse" />
                   <span className="font-serif text-[10px] sm:text-xs uppercase tracking-widest text-royal-gold">
-                    {eventCategory} CELEBRATION
+                    {eventCategory === 'HOUSEWARMING'
+                      ? 'SHUBH GRIHA PRAVESH'
+                      : eventCategory === 'BABY_SHOWER'
+                      ? 'BABY SHOWER CELEBRATION'
+                      : eventCategory === 'BIRTHDAY'
+                      ? 'BIRTHDAY CELEBRATION'
+                      : eventCategory === 'ANNIVERSARY'
+                      ? 'ANNIVERSARY CELEBRATION'
+                      : eventCategory === 'ENGAGEMENT'
+                      ? 'ENGAGEMENT CEREMONY'
+                      : `${eventCategory} CELEBRATION`}
                   </span>
                   <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-royal-gold animate-pulse" />
                   <div className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-royal-gold" />
@@ -319,6 +343,8 @@ export const AnimatedInvitationRenderer: React.FC<AnimatedInvitationRendererProp
                       title={title}
                       honorees={honorees}
                       slug={slug}
+                      venueName={venueName}
+                      eventDate={eventDate}
                     />
                   )}
                 </div>

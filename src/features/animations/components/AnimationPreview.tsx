@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { AnimationConfig, DesignConfig, TemplateResponse } from '@/types';
 import { AnimatedInvitationRenderer } from './AnimatedInvitationRenderer';
+import { getSampleDataForCategory } from '@/lib/sampleCelebrationData';
 import { X, RefreshCw } from 'lucide-react';
 
 interface AnimationPreviewModalProps {
@@ -73,51 +74,28 @@ export const AnimationPreviewModal: React.FC<AnimationPreviewModalProps> = ({
 
         {/* Scrollable Preview Canvas */}
         <div className="flex-1 overflow-y-auto">
-          <AnimatedInvitationRenderer
-            key={replayKey}
-            title="Siddharth & Ananya's Wedding Celebration"
-            eventCategory={template.category}
-            hosts="Mr. & Mrs. Rajesh Sharma"
-            honorees="Siddharth & Ananya"
-            eventDate={new Date(Date.now() + 1000 * 60 * 60 * 24 * 45).toISOString()}
-            venueName="The Grand Palace Hotel & Convention Centre"
-            venueAddress="Palace Grounds, MG Road, Bengaluru, Karnataka 560001"
-            googleMapsUrl="https://maps.google.com"
-            functions={JSON.stringify([
-              {
-                id: '1',
-                name: 'Traditional Sangeet & Mehendi',
-                date: 'November 20, 2026',
-                time: '6:30 PM Onwards',
-                venueName: 'The Royal Lawn',
-                dressCode: 'Festive Vibrant Traditional',
-              },
-              {
-                id: '2',
-                name: 'Auspicious Muhurtham Ceremony',
-                date: 'November 21, 2026',
-                time: '9:45 AM Auspicious Time',
-                venueName: 'Main Kalyana Mandapam',
-                dressCode: 'South Indian Silks / Formal Attire',
-              },
-            ])}
-            designConfig={template.defaultDesignConfig}
-            animationConfig={template.defaultAnimationConfig}
-            mediaGallery={JSON.stringify([
-              {
-                id: '1',
-                url: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=600&q=80',
-                caption: 'Pre-wedding photoshoot',
-              },
-              {
-                id: '2',
-                url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80',
-                caption: 'Engagement smiles',
-              },
-            ])}
-            slug="preview-demo"
-            isPreview={true}
-          />
+          {(() => {
+            const sample = getSampleDataForCategory(template.category);
+            return (
+              <AnimatedInvitationRenderer
+                key={replayKey}
+                title={sample.title}
+                eventCategory={template.category}
+                hosts={sample.hosts}
+                honorees={sample.honorees}
+                eventDate={new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString()}
+                venueName={sample.venueName}
+                venueAddress={sample.venueAddress}
+                googleMapsUrl={sample.googleMapsUrl}
+                functions={JSON.stringify(sample.functions)}
+                designConfig={template.defaultDesignConfig}
+                animationConfig={template.defaultAnimationConfig}
+                mediaGallery={JSON.stringify(sample.mediaGallery)}
+                slug="preview-demo"
+                isPreview={true}
+              />
+            );
+          })()}
         </div>
       </div>
     </div>

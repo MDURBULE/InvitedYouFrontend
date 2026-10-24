@@ -1,22 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { templatesApi } from '@/lib/api';
 import { TemplateResponse, EventCategory, TemplateType } from '@/types';
+import { CURATED_TEMPLATES } from '@/lib/curatedTemplates';
 import { AnimationPreviewModal } from '@/features/animations/components/AnimationPreview';
-import { Sparkles, Eye, ArrowRight, Filter, Check } from 'lucide-react';
+import { Sparkles, Eye, ArrowRight, Filter, Check, Search, X } from 'lucide-react';
 
-const CATEGORIES: { id: string; label: string }[] = [
-  { id: 'ALL', label: 'All Celebrations' },
-  { id: 'WEDDING', label: 'Wedding' },
-  { id: 'ENGAGEMENT', label: 'Engagement' },
-  { id: 'BIRTHDAY', label: 'Birthday' },
-  { id: 'ANNIVERSARY', label: 'Anniversary' },
-  { id: 'HOUSEWARMING', label: 'Griha Pravesh' },
-  { id: 'BABY_SHOWER', label: 'Baby Shower' },
-  { id: 'FESTIVAL', label: 'Festivals' },
+const CATEGORIES: { id: string; label: string; icon: string }[] = [
+  { id: 'ALL', label: 'All Celebrations', icon: '✨' },
+  { id: 'WEDDING', label: 'Wedding Suites', icon: '💍' },
+  { id: 'ENGAGEMENT', label: 'Engagement & Rings', icon: '💎' },
+  { id: 'BIRTHDAY', label: 'Birthday Fiesta', icon: '🎂' },
+  { id: 'HOUSEWARMING', label: 'Griha Pravesh', icon: '🪔' },
+  { id: 'ANNIVERSARY', label: 'Anniversary', icon: '🥂' },
+  { id: 'BABY_SHOWER', label: 'Baby Shower', icon: '🍼' },
+  { id: 'FESTIVAL', label: 'Festivals & Pooja', icon: '🎆' },
 ];
 
 const TEMPLATE_TYPES: { id: string; label: string }[] = [
@@ -27,14 +28,12 @@ const TEMPLATE_TYPES: { id: string; label: string }[] = [
 
 const STYLES: { id: string; label: string }[] = [
   { id: 'ALL', label: 'All Styles' },
-  { id: 'ROYAL', label: 'Royal & Palace' },
+  { id: 'ROYAL', label: 'Royal Palace' },
   { id: 'TRADITIONAL', label: 'Traditional' },
-  { id: 'FLORAL', label: 'Botanical & Floral' },
-  { id: 'PLAYFUL', label: 'Playful & Festive' },
-  { id: 'MINIMALIST', label: 'Modern Minimalist' },
+  { id: 'FLORAL', label: 'Botanical Floral' },
+  { id: 'PLAYFUL', label: 'Playful Fiesta' },
+  { id: 'MINIMALIST', label: 'Modern Minimal' },
 ];
-
-import { Suspense } from 'react';
 
 function TemplateGalleryContent() {
   const router = useRouter();
@@ -43,287 +42,145 @@ function TemplateGalleryContent() {
   const [category, setCategory] = useState<string>(searchParams.get('category') || 'ALL');
   const [templateType, setTemplateType] = useState<string>(searchParams.get('templateType') || 'ALL');
   const [styleTag, setStyleTag] = useState<string>(searchParams.get('styleTag') || 'ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const [templates, setTemplates] = useState<TemplateResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [allTemplates, setAllTemplates] = useState<TemplateResponse[]>(CURATED_TEMPLATES);
+  const [loading, setLoading] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateResponse | null>(null);
 
   useEffect(() => {
     async function loadTemplates() {
-      setLoading(true);
       try {
-        const data = await templatesApi.getTemplates({
-          category: category !== 'ALL' ? category : undefined,
-          templateType: templateType !== 'ALL' ? templateType : undefined,
-          styleTag: styleTag !== 'ALL' ? styleTag : undefined,
-        });
-        setTemplates(data);
+        const data = await templatesApi.getTemplates({});
+        if (data && data.length > 0) {
+          // Add backend templates first
+          data.forEach((t) => idMap.set(t.id, t));
+          // Overlay curated templates so high-resolution thumbnails and rich configs take precedence
+          CURATED_TEMPLATES.forEach((t) => {
+            const backend = idMap.get(t.id);
+            idMap.set(t.id, backend ? { ...backend, ...t } : t);
+          });
+          setAllTemplates(Array.from(idMap.values()));
+        }
       } catch (e) {
-        // Fallback default templates if backend is starting
-        setTemplates([
-          {
-            id: 'royal-rajwada-wedding',
-            name: 'Royal Rajwada Palace Suite',
-            category: 'WEDDING',
-            templateType: 'ANIMATED',
-            styleTag: 'ROYAL',
-            description:
-              'Opulent imperial ruby and antique gold palace aesthetics with majestic double door parting and wax seal reveal.',
-            thumbnailUrl:
-              'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80',
-            previewAnimationUrl: '',
-            defaultPreset: 'royal-curtain-doors',
-            supportedPresets: ['royal-curtain-doors', 'envelope-reveal', 'modern-cinematic'],
-            defaultDesignConfig: JSON.stringify({
-              primaryColor: '#8B1E2E',
-              secondaryColor: '#D4AF37',
-              backgroundColor: '#140609',
-              titleFont: 'Cinzel Decorative',
-              bodyFont: 'Outfit',
-            }),
-            defaultAnimationConfig: JSON.stringify({
-              version: 1,
-              preset: 'royal-curtain-doors',
-              intensity: 'balanced',
-              interaction: 'tap-to-open',
-              enableParticles: true,
-              particleType: 'gold-dust',
-              particleCount: 26,
-              allowReplay: true,
-              reducedMotionFallback: true,
-              steps: [],
-            }),
-            supportedMediaTypes: ['image', 'video', 'audio'],
-            isPremium: true,
-            isPublished: true,
-            version: 1,
-          },
-          {
-            id: 'botanical-bloom-romance',
-            name: 'Botanical Bloom & Vines',
-            category: 'ENGAGEMENT',
-            templateType: 'ANIMATED',
-            styleTag: 'FLORAL',
-            description:
-              'Whimsical hand-drawn vines that grow and bloom around the invitation with soft falling rose petals.',
-            thumbnailUrl:
-              'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80',
-            previewAnimationUrl: '',
-            defaultPreset: 'botanical-bloom',
-            supportedPresets: ['botanical-bloom', 'envelope-reveal'],
-            defaultDesignConfig: JSON.stringify({
-              primaryColor: '#C98686',
-              secondaryColor: '#6E8070',
-              backgroundColor: '#FAF6F2',
-              titleFont: 'Playfair Display',
-              bodyFont: 'Inter',
-            }),
-            defaultAnimationConfig: JSON.stringify({
-              version: 1,
-              preset: 'botanical-bloom',
-              intensity: 'balanced',
-              interaction: 'auto-open',
-              enableParticles: true,
-              particleType: 'rose-petals',
-              particleCount: 18,
-              allowReplay: true,
-              reducedMotionFallback: true,
-              steps: [],
-            }),
-            supportedMediaTypes: ['image', 'audio'],
-            isPremium: false,
-            isPublished: true,
-            version: 1,
-          },
-          {
-            id: 'golden-glamour-birthday',
-            name: 'Golden Glamour Birthday Fiesta',
-            category: 'BIRTHDAY',
-            templateType: 'ANIMATED',
-            styleTag: 'PLAYFUL',
-            description:
-              'Vibrant celebratory pop with shimmering gold confetti bursts, lively typography, and interactive photo slideshow.',
-            thumbnailUrl:
-              'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=600&q=80',
-            previewAnimationUrl: '',
-            defaultPreset: 'celebration-pop',
-            supportedPresets: ['celebration-pop', 'envelope-reveal'],
-            defaultDesignConfig: JSON.stringify({
-              primaryColor: '#F4A226',
-              secondaryColor: '#E76F51',
-              backgroundColor: '#12151E',
-              titleFont: 'Outfit',
-              bodyFont: 'Inter',
-            }),
-            defaultAnimationConfig: JSON.stringify({
-              version: 1,
-              preset: 'celebration-pop',
-              intensity: 'expressive',
-              interaction: 'tap-to-open',
-              enableParticles: true,
-              particleType: 'confetti',
-              particleCount: 35,
-              allowReplay: true,
-              reducedMotionFallback: true,
-              steps: [],
-            }),
-            supportedMediaTypes: ['image', 'video', 'audio'],
-            isPremium: false,
-            isPublished: true,
-            version: 1,
-          },
-          {
-            id: 'classic-wax-seal-wedding',
-            name: 'Classic Wax Seal Keepsake',
-            category: 'WEDDING',
-            templateType: 'ANIMATED',
-            styleTag: 'TRADITIONAL',
-            description:
-              'Vintage embossed envelope with authentic cracking wax seal that unfolds into a 3D elevated wedding invitation card.',
-            thumbnailUrl:
-              'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=600&q=80',
-            previewAnimationUrl: '',
-            defaultPreset: 'envelope-reveal',
-            supportedPresets: ['envelope-reveal', 'royal-curtain-doors'],
-            defaultDesignConfig: JSON.stringify({
-              primaryColor: '#A12C2F',
-              secondaryColor: '#C5A059',
-              backgroundColor: '#F7F4EE',
-              titleFont: 'Playfair Display',
-              bodyFont: 'Inter',
-            }),
-            defaultAnimationConfig: JSON.stringify({
-              version: 1,
-              preset: 'envelope-reveal',
-              intensity: 'balanced',
-              interaction: 'tap-to-open',
-              enableParticles: true,
-              particleType: 'gold-dust',
-              particleCount: 20,
-              allowReplay: true,
-              reducedMotionFallback: true,
-              steps: [],
-            }),
-            supportedMediaTypes: ['image', 'video', 'audio'],
-            isPremium: false,
-            isPublished: true,
-            version: 1,
-          },
-          {
-            id: 'modern-minimalist-chic',
-            name: 'Modern Minimalist Chic',
-            category: 'ANNIVERSARY',
-            templateType: 'STATIC',
-            styleTag: 'MINIMALIST',
-            description:
-              'Ultra-clean contemporary typography, crisp generous whitespace, and instant access designed for modern couples.',
-            thumbnailUrl:
-              'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=600&q=80',
-            previewAnimationUrl: '',
-            defaultPreset: 'none',
-            supportedPresets: ['none'],
-            defaultDesignConfig: JSON.stringify({
-              primaryColor: '#1A1A1A',
-              secondaryColor: '#737373',
-              backgroundColor: '#FFFFFF',
-              titleFont: 'Outfit',
-              bodyFont: 'Inter',
-            }),
-            defaultAnimationConfig: JSON.stringify({
-              version: 1,
-              preset: 'none',
-              intensity: 'subtle',
-              interaction: 'auto-open',
-              enableParticles: false,
-              allowReplay: false,
-              reducedMotionFallback: true,
-              steps: [],
-            }),
-            supportedMediaTypes: ['image'],
-            isPremium: false,
-            isPublished: true,
-            version: 1,
-          },
-          {
-            id: 'griha-pravesh-auspicious',
-            name: 'Shubh Griha Pravesh & Pooja',
-            category: 'HOUSEWARMING',
-            templateType: 'ANIMATED',
-            styleTag: 'TRADITIONAL',
-            description:
-              'Warm auspicious marigold toran, glowing diya lanterns, and welcoming ceremonial doors for blessed new beginnings.',
-            thumbnailUrl:
-              'https://images.unsplash.com/photo-1609137144813-7d9921338f24?auto=format&fit=crop&w=600&q=80',
-            previewAnimationUrl: '',
-            defaultPreset: 'royal-curtain-doors',
-            supportedPresets: ['royal-curtain-doors', 'envelope-reveal'],
-            defaultDesignConfig: JSON.stringify({
-              primaryColor: '#E65100',
-              secondaryColor: '#FFB300',
-              backgroundColor: '#FFFDE7',
-              titleFont: 'Cinzel Decorative',
-              bodyFont: 'Outfit',
-            }),
-            defaultAnimationConfig: JSON.stringify({
-              version: 1,
-              preset: 'royal-curtain-doors',
-              intensity: 'balanced',
-              interaction: 'tap-to-open',
-              enableParticles: true,
-              particleType: 'gold-dust',
-              particleCount: 20,
-              allowReplay: true,
-              reducedMotionFallback: true,
-              steps: [],
-            }),
-            supportedMediaTypes: ['image', 'audio'],
-            isPremium: false,
-            isPublished: true,
-            version: 1,
-          },
-        ]);
-      } finally {
-        setLoading(false);
+        // Fallback to curated templates
+        setAllTemplates(CURATED_TEMPLATES);
       }
     }
 
     loadTemplates();
-  }, [category, templateType, styleTag]);
+  }, []);
+
+  // Filter templates based on category, format, style, and search query
+  const filteredTemplates = useMemo(() => {
+    return allTemplates.filter((t) => {
+      // Category filter
+      if (category !== 'ALL' && t.category !== category) {
+        return false;
+      }
+      // Template type filter
+      if (templateType !== 'ALL' && t.templateType !== templateType) {
+        return false;
+      }
+      // Style tag filter
+      if (styleTag !== 'ALL' && t.styleTag !== styleTag) {
+        return false;
+      }
+      // Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesName = t.name.toLowerCase().includes(q);
+        const matchesCategory = t.category.toLowerCase().includes(q);
+        const matchesDesc = t.description?.toLowerCase().includes(q);
+        const matchesStyle = t.styleTag.toLowerCase().includes(q);
+        if (!matchesName && !matchesCategory && !matchesDesc && !matchesStyle) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [allTemplates, category, templateType, styleTag, searchQuery]);
+
+  // Dynamic counts for category tabs
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { ALL: allTemplates.length };
+    CATEGORIES.forEach((c) => {
+      if (c.id !== 'ALL') {
+        counts[c.id] = allTemplates.filter((t) => t.category === c.id).length;
+      }
+    });
+    return counts;
+  }, [allTemplates]);
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+      {/* Gallery Hero Header */}
       <div className="text-center space-y-3">
-        <span className="text-xs uppercase tracking-widest text-royal-gold font-serif font-semibold">
-          Curated Design Collection
-        </span>
-        <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white">
-          Invitation Template Gallery
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-royal-gold/30 bg-royal-gold/10 px-4 py-1 text-xs font-serif font-semibold text-royal-champagne">
+          <Sparkles className="h-3.5 w-3.5 text-royal-gold" />
+          <span>Curated Invitation Suites</span>
+        </div>
+        <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white tracking-tight">
+          Celebration Template <span className="text-royal-gold">Gallery</span>
         </h1>
-        <p className="text-sm text-gray-400 font-sans max-w-2xl mx-auto">
-          Explore handcrafted Indian celebration suites and contemporary minimalist cards. Preview
-          the opening animation live before personalizing.
+        <p className="text-xs sm:text-sm text-gray-300 font-sans max-w-2xl mx-auto leading-relaxed">
+          Explore handcrafted animated digital invitations designed specifically for each celebration.
+          Preview live entrance animations before personalizing.
         </p>
       </div>
 
       {/* Filter Controls Bar */}
-      <div className="space-y-4 rounded-3xl border border-royal-gold/30 bg-royal-dark/80 p-5 shadow-xl backdrop-blur-md">
-        {/* Category Pills - Horizontal scroll on mobile */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none pb-1 sm:flex-wrap">
-          {CATEGORIES.map((cat) => (
+      <div className="space-y-4 rounded-3xl border border-royal-gold/30 bg-royal-dark/90 p-4 sm:p-6 shadow-xl backdrop-blur-md">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search templates by name, style, or celebration occasion..."
+            className="w-full rounded-2xl border border-white/10 bg-white/5 pl-10 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none transition-colors"
+          />
+          {searchQuery && (
             <button
-              key={cat.id}
               type="button"
-              onClick={() => setCategory(cat.id)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-sans font-medium whitespace-nowrap shrink-0 transition-all ${
-                category === cat.id
-                  ? 'bg-royal-gold text-royal-dark font-bold shadow-gold'
-                  : 'text-gray-300 hover:text-white bg-white/5 hover:bg-white/10'
-              }`}
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-3 text-gray-400 hover:text-white"
             >
-              {cat.label}
+              <X className="h-4 w-4" />
             </button>
-          ))}
+          )}
+        </div>
+
+        {/* Category Pills with Icon and Count Badges */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none pb-1 sm:flex-wrap">
+          {CATEGORIES.map((cat) => {
+            const count = categoryCounts[cat.id] || 0;
+            const isSelected = category === cat.id;
+
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setCategory(cat.id)}
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-sans whitespace-nowrap shrink-0 transition-all ${
+                  isSelected
+                    ? 'bg-gradient-to-r from-royal-gold to-royal-champagne text-royal-dark font-bold shadow-gold scale-105'
+                    : 'text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+                <span
+                  className={`text-[10px] rounded-full px-1.5 py-0.2 ${
+                    isSelected ? 'bg-royal-dark/20 text-royal-dark' : 'bg-white/10 text-gray-400'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Format & Style Secondary Filters */}
@@ -336,10 +193,10 @@ function TemplateGalleryContent() {
                 key={t.id}
                 type="button"
                 onClick={() => setTemplateType(t.id)}
-                className={`rounded-lg px-2.5 py-1 font-medium whitespace-nowrap shrink-0 transition-all ${
+                className={`rounded-xl px-2.5 py-1 font-medium whitespace-nowrap shrink-0 transition-all ${
                   templateType === t.id
-                    ? 'bg-royal-ruby text-white font-bold'
-                    : 'text-gray-400 hover:text-gray-200'
+                    ? 'bg-royal-ruby text-white font-bold border border-royal-gold/40'
+                    : 'text-gray-400 hover:text-gray-200 bg-white/5'
                 }`}
               >
                 {t.label}
@@ -355,10 +212,10 @@ function TemplateGalleryContent() {
                 key={s.id}
                 type="button"
                 onClick={() => setStyleTag(s.id)}
-                className={`rounded-lg px-2.5 py-1 font-medium whitespace-nowrap shrink-0 transition-all ${
+                className={`rounded-xl px-2.5 py-1 font-medium whitespace-nowrap shrink-0 transition-all ${
                   styleTag === s.id
-                    ? 'bg-white/20 text-white font-bold'
-                    : 'text-gray-400 hover:text-gray-200'
+                    ? 'bg-white/20 text-white font-bold border border-white/30'
+                    : 'text-gray-400 hover:text-gray-200 bg-white/5'
                 }`}
               >
                 {s.label}
@@ -368,12 +225,26 @@ function TemplateGalleryContent() {
         </div>
       </div>
 
-      {/* Templates Grid */}
-      {loading ? (
-        <div className="py-20 text-center text-royal-champagne font-serif text-lg animate-pulse">
-          Loading curated templates...
-        </div>
-      ) : templates.length === 0 ? (
+      {/* Templates Count and Grid */}
+      <div className="flex items-center justify-between text-xs text-gray-400 px-1">
+        <span>Showing {filteredTemplates.length} celebration suites</span>
+        {(category !== 'ALL' || templateType !== 'ALL' || styleTag !== 'ALL' || searchQuery) && (
+          <button
+            type="button"
+            onClick={() => {
+              setCategory('ALL');
+              setTemplateType('ALL');
+              setStyleTag('ALL');
+              setSearchQuery('');
+            }}
+            className="text-royal-gold hover:underline"
+          >
+            Clear all filters
+          </button>
+        )}
+      </div>
+
+      {filteredTemplates.length === 0 ? (
         <div className="rounded-3xl border border-white/10 bg-white/5 py-16 text-center space-y-3">
           <p className="font-serif text-lg text-white">No templates match the selected filters.</p>
           <button
@@ -382,15 +253,16 @@ function TemplateGalleryContent() {
               setCategory('ALL');
               setTemplateType('ALL');
               setStyleTag('ALL');
+              setSearchQuery('');
             }}
-            className="text-xs text-royal-gold hover:underline"
+            className="text-xs text-royal-gold hover:underline font-semibold"
           >
             Reset all filters
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates.map((tmpl) => (
+          {filteredTemplates.map((tmpl) => (
             <div
               key={tmpl.id}
               className="group relative flex flex-col rounded-3xl border border-royal-gold/25 bg-royal-dark/90 overflow-hidden shadow-lg transition-all hover:border-royal-gold/60 hover:-translate-y-1 hover:shadow-gold"
@@ -398,10 +270,14 @@ function TemplateGalleryContent() {
               {/* Image Preview & Badges */}
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/60">
                 <img
-                  src={tmpl.thumbnailUrl}
+                  src={tmpl.thumbnailUrl || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80'}
                   alt={tmpl.name}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80';
+                  }}
                 />
 
                 {/* Format Badge */}

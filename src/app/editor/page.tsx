@@ -14,6 +14,8 @@ import {
 } from '@/types';
 import { getDefaultAnimationConfig, PRESET_LIBRARY } from '@/features/animations/engine/presetLibrary';
 import { AnimatedInvitationRenderer } from '@/features/animations/components/AnimatedInvitationRenderer';
+import { CURATED_TEMPLATES } from '@/lib/curatedTemplates';
+import { getSampleDataForCategory } from '@/lib/sampleCelebrationData';
 import {
   Sparkles,
   Save,
@@ -108,9 +110,50 @@ function InvitationEditorContent() {
   // Load template details
   useEffect(() => {
     async function loadTemplate() {
+      const applySampleDetails = (cat: string) => {
+        if (!invitationIdParam) {
+          const sample = getSampleDataForCategory(cat);
+          setTitle(sample.title);
+          setHonorees(sample.honorees);
+          setHosts(sample.hosts);
+          setEventDate(sample.eventDate);
+          setVenueName(sample.venueName);
+          setVenueAddress(sample.venueAddress);
+          setGoogleMapsUrl(sample.googleMapsUrl);
+          setSlug(`${sample.slug}-${Math.floor(1000 + Math.random() * 9000)}`);
+          setFunctions(sample.functions);
+          setMediaGallery(sample.mediaGallery);
+        }
+      };
+
+      // Check if it matches any curated template by id or slug
+      const curated = CURATED_TEMPLATES.find(
+        (t) => String(t.id) === String(templateIdParam) || t.slug === String(templateIdParam)
+      );
+      if (curated) {
+        setTemplate(curated);
+        const cat = curated.category || curated.eventCategory || 'WEDDING';
+        setEventCategory(cat);
+        applySampleDetails(cat);
+        if (curated.defaultAnimationConfig) {
+          try {
+            setAnimConfig(JSON.parse(curated.defaultAnimationConfig));
+          } catch {}
+        }
+        if (curated.defaultDesignConfig) {
+          try {
+            setDesignConfig(JSON.parse(curated.defaultDesignConfig));
+          } catch {}
+        }
+        return;
+      }
+
       try {
         const tmpl = await templatesApi.getTemplateById(templateIdParam);
         setTemplate(tmpl);
+        const cat = tmpl.category || tmpl.eventCategory || 'WEDDING';
+        setEventCategory(cat);
+        applySampleDetails(cat);
         if (tmpl.defaultAnimationConfig) {
           try {
             setAnimConfig(JSON.parse(tmpl.defaultAnimationConfig));
@@ -122,7 +165,24 @@ function InvitationEditorContent() {
           } catch {}
         }
       } catch (e) {
-        // Fallback
+        // Graceful fallback to default curated template
+        const fallback = CURATED_TEMPLATES[0];
+        if (fallback) {
+          setTemplate(fallback);
+          const cat = fallback.category || fallback.eventCategory || 'WEDDING';
+          setEventCategory(cat);
+          applySampleDetails(cat);
+          if (fallback.defaultAnimationConfig) {
+            try {
+              setAnimConfig(JSON.parse(fallback.defaultAnimationConfig));
+            } catch {}
+          }
+          if (fallback.defaultDesignConfig) {
+            try {
+              setDesignConfig(JSON.parse(fallback.defaultDesignConfig));
+            } catch {}
+          }
+        }
       }
     }
     loadTemplate();
@@ -376,7 +436,17 @@ function InvitationEditorContent() {
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Wedding Ceremony & Reception"
+                    placeholder={
+                      eventCategory === 'HOUSEWARMING'
+                        ? 'e.g. Shubh Griha Pravesh & Vastu Shanti Puja'
+                        : eventCategory === 'BIRTHDAY'
+                        ? "e.g. Aarav's 1st Birthday Wonder Bash"
+                        : eventCategory === 'ANNIVERSARY'
+                        ? 'e.g. 25th Silver Jubilee Anniversary Celebration'
+                        : eventCategory === 'BABY_SHOWER'
+                        ? 'e.g. Baby Shower & Godh Bharai Celebration'
+                        : 'e.g. Wedding Ceremony & Grand Reception'
+                    }
                     className="w-full rounded-xl border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none"
                   />
                 </div>
@@ -387,7 +457,20 @@ function InvitationEditorContent() {
                   </label>
                   <select
                     value={eventCategory}
-                    onChange={(e) => setEventCategory(e.target.value)}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setEventCategory(newCat);
+                      if (!invitationIdParam) {
+                        const sample = getSampleDataForCategory(newCat);
+                        setTitle(sample.title);
+                        setHonorees(sample.honorees);
+                        setHosts(sample.hosts);
+                        setVenueName(sample.venueName);
+                        setVenueAddress(sample.venueAddress);
+                        setFunctions(sample.functions);
+                        setMediaGallery(sample.mediaGallery);
+                      }
+                    }}
                     className="w-full rounded-xl border border-white/20 bg-[#1A1C29] px-3.5 py-2.5 text-sm text-white focus:border-royal-gold focus:outline-none"
                   >
                     <option value="WEDDING">Wedding</option>
@@ -403,26 +486,50 @@ function InvitationEditorContent() {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Honorees / Couple Names *
+                    {eventCategory === 'HOUSEWARMING'
+                      ? 'Family / Host Names *'
+                      : eventCategory === 'BIRTHDAY'
+                      ? 'Birthday Star / Honoree Name *'
+                      : eventCategory === 'BABY_SHOWER'
+                      ? 'Mom-to-Be / Baby Name *'
+                      : 'Honorees / Couple Names *'}
                   </label>
                   <input
                     type="text"
                     value={honorees}
                     onChange={(e) => setHonorees(e.target.value)}
-                    placeholder="e.g. Siddharth & Ananya"
+                    placeholder={
+                      eventCategory === 'HOUSEWARMING'
+                        ? 'e.g. The Sharma Family (Rajesh & Sunita)'
+                        : eventCategory === 'BIRTHDAY'
+                        ? 'e.g. Aarav Sharma'
+                        : eventCategory === 'BABY_SHOWER'
+                        ? 'e.g. Celebrating Mom-to-Be Sneha'
+                        : 'e.g. Siddharth & Ananya'
+                    }
                     className="w-full rounded-xl border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Hosts / Parents Announcement
+                    {eventCategory === 'HOUSEWARMING'
+                      ? 'Welcoming Family / Elders'
+                      : eventCategory === 'BIRTHDAY'
+                      ? 'Organized By (Parents / Hosts)'
+                      : 'Hosts / Parents Announcement'}
                   </label>
                   <input
                     type="text"
                     value={hosts}
                     onChange={(e) => setHosts(e.target.value)}
-                    placeholder="e.g. Mr. & Mrs. Sharma"
+                    placeholder={
+                      eventCategory === 'HOUSEWARMING'
+                        ? 'e.g. Sunita & Rajesh Sharma'
+                        : eventCategory === 'BIRTHDAY'
+                        ? 'e.g. Pooja & Vikram Sharma'
+                        : 'e.g. Mr. & Mrs. Sharma & Mr. & Mrs. Verma'
+                    }
                     className="w-full rounded-xl border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none"
                   />
                 </div>
