@@ -10,7 +10,6 @@ import { AnimationControls } from './AnimationControls';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { VenueNavigationCard } from '@/components/VenueNavigationCard';
 import { AddToCalendarModal } from '@/components/AddToCalendarModal';
-import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { Calendar, Clock, MapPin, Sparkles, Image as ImageIcon } from 'lucide-react';
 
 interface AnimatedInvitationRendererProps {
@@ -328,26 +327,18 @@ export const AnimatedInvitationRenderer: React.FC<AnimatedInvitationRendererProp
                   </div>
                 )}
 
-                {/* Top Action Row: Add to Calendar & WhatsApp Share */}
-                <div className="mt-5 sm:mt-7 flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-3.5 sm:pt-4 border-t border-royal-gold/20">
-                  <AddToCalendarModal
-                    title={title}
-                    honorees={honorees}
-                    eventDate={eventDate}
-                    venueName={venueName}
-                    venueAddress={venueAddress}
-                  />
-
-                  {!isPreview && (
-                    <WhatsAppShareButton
+                {/* Top Action Row: Add to Calendar */}
+                {eventDate && (
+                  <div className="mt-5 sm:mt-7 flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-3.5 sm:pt-4 border-t border-royal-gold/20">
+                    <AddToCalendarModal
                       title={title}
                       honorees={honorees}
-                      slug={slug}
-                      venueName={venueName}
                       eventDate={eventDate}
+                      venueName={venueName}
+                      venueAddress={venueAddress}
                     />
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Countdown Section */}

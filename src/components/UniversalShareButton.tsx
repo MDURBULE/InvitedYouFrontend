@@ -13,8 +13,8 @@ import {
   Twitter,
   Mail,
   Smartphone,
-  Sparkles,
   ExternalLink,
+  Download,
 } from 'lucide-react';
 
 interface UniversalShareButtonProps {
@@ -107,7 +107,7 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
   )}`;
 
   // Quick QR code URL (using standard SVG QR generator)
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=${encodeURIComponent(
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=12&data=${encodeURIComponent(
     fullUrl
   )}`;
 
@@ -118,53 +118,82 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
         <button
           type="button"
           onClick={handleNativeShare}
-          className={`flex h-9 w-9 items-center justify-center rounded-xl border border-royal-gold/40 bg-royal-gold/10 text-royal-champagne hover:bg-royal-gold/20 active:scale-95 transition-all ${className}`}
+          className={`flex h-8 w-8 items-center justify-center rounded-xl border border-royal-gold/40 bg-royal-gold/10 text-royal-champagne hover:bg-royal-gold/20 hover:border-royal-gold/60 active:scale-95 transition-all shadow-sm ${className}`}
           title="Share across apps"
           aria-label="Share across apps"
         >
-          <Share2 className="h-4 w-4" />
+          <Share2 className="h-3.5 w-3.5" />
         </button>
       ) : variant === 'compact' ? (
-        <button
-          type="button"
-          onClick={handleNativeShare}
-          className={`inline-flex items-center gap-1.5 rounded-xl border border-royal-gold/40 bg-royal-gold/10 px-3 py-1.5 text-xs font-semibold text-royal-champagne hover:bg-royal-gold/20 active:scale-95 transition-all ${className}`}
-        >
-          <Share2 className="h-3.5 w-3.5" />
-          <span>Share</span>
-        </button>
+        <div className={`flex items-center gap-2 ${className}`}>
+          <button
+            type="button"
+            onClick={handleNativeShare}
+            className="flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-xl border border-royal-gold/40 bg-royal-gold/10 px-3 text-xs font-semibold text-royal-champagne hover:bg-royal-gold/20 hover:border-royal-gold/60 active:scale-95 transition-all shadow-sm"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            <span>Share</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowQr(true);
+              setModalOpen(true);
+            }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-royal-gold/40 bg-royal-gold/10 text-royal-champagne hover:bg-royal-gold/20 hover:border-royal-gold/60 active:scale-95 transition-all shadow-sm"
+            title="Show QR Code"
+            aria-label="Show QR Code"
+          >
+            <QrCode className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ) : variant === 'secondary' ? (
+        <div className={`flex items-center gap-2 ${className}`}>
+          <button
+            type="button"
+            onClick={handleNativeShare}
+            className="inline-flex items-center gap-2 rounded-xl border border-royal-gold/40 bg-royal-gold/10 hover:bg-royal-gold/20 text-royal-champagne px-4 py-2 text-xs font-semibold active:scale-95 transition-all shadow-sm"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            <span>Share Invitation</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowQr(true);
+              setModalOpen(true);
+            }}
+            className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-xl border border-royal-gold/40 bg-royal-gold/10 hover:bg-royal-gold/20 text-royal-champagne hover:border-royal-gold/60 active:scale-95 transition-all shadow-sm"
+            title="Show QR Code"
+            aria-label="Show QR Code"
+          >
+            <QrCode className="h-3.5 w-3.5" />
+          </button>
+        </div>
       ) : (
         <div className={`flex flex-wrap items-center gap-2 ${className}`}>
           {/* Main "Share Across Apps" Button */}
           <button
             type="button"
             onClick={handleNativeShare}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-royal-gold via-royal-champagne to-royal-gold bg-[length:200%_auto] hover:bg-right text-royal-dark px-4 sm:px-5 py-2.5 text-xs font-bold shadow-gold active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-royal-gold via-royal-champagne to-royal-gold bg-[length:200%_auto] hover:bg-right text-royal-dark px-4 sm:px-5 py-2.5 text-xs font-bold shadow-gold active:scale-95 transition-all"
           >
             <Share2 className="h-4 w-4 text-royal-dark" />
             <span>Share Invitation</span>
-          </button>
-
-          {/* Quick Copy Link Button */}
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white px-3.5 py-2.5 text-xs font-medium active:scale-95 transition-all"
-            title="Copy invitation link"
-          >
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-            <span>{copied ? 'Copied!' : 'Copy Link'}</span>
           </button>
 
           {/* Quick QR Code Modal Trigger */}
           <button
             type="button"
             onClick={() => {
-              setModalOpen(true);
               setShowQr(true);
+              setModalOpen(true);
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-all"
+            className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl border border-royal-gold/40 bg-royal-gold/10 hover:bg-royal-gold/20 text-royal-champagne hover:border-royal-gold/60 active:scale-95 transition-all shadow-sm"
             title="Show QR Code"
+            aria-label="Show QR Code"
           >
             <QrCode className="h-4 w-4" />
           </button>
@@ -181,18 +210,24 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
           }}
         >
           <div
-            className="relative w-full max-w-md rounded-3xl border border-royal-gold/30 bg-[#10121D] p-5 sm:p-6 shadow-2xl text-white space-y-5"
+            className="relative w-full max-w-md rounded-3xl border border-royal-gold/30 bg-[#10121D] p-5 sm:p-6 shadow-2xl text-white space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-royal-gold/15 text-royal-gold">
-                  <Share2 className="h-4 w-4" />
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-royal-gold/15 text-royal-gold border border-royal-gold/20">
+                  {showQr ? <QrCode className="h-4.5 w-4.5" /> : <Share2 className="h-4.5 w-4.5" />}
                 </div>
                 <div>
-                  <h3 className="font-serif text-base font-bold text-white">Share Invitation</h3>
-                  <p className="text-[11px] text-gray-400 font-sans">Share seamlessly across your favorite apps</p>
+                  <h3 className="font-serif text-base font-bold text-white">
+                    {showQr ? 'Invitation QR Code' : 'Share Invitation'}
+                  </h3>
+                  <p className="text-[11px] text-gray-400 font-sans">
+                    {showQr
+                      ? 'Scan to view on any mobile device'
+                      : 'Share seamlessly across your favorite apps'}
+                  </p>
                 </div>
               </div>
               <button
@@ -202,35 +237,90 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                   setShowQr(false);
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Close modal"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* QR Code View Toggle */}
+            {/* View Mode Switcher: Share via Apps | QR Code */}
+            <div className="grid grid-cols-2 rounded-xl bg-white/5 p-1 border border-white/10">
+              <button
+                type="button"
+                onClick={() => setShowQr(false)}
+                className={`flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  !showQr
+                    ? 'bg-royal-gold/20 text-royal-champagne border border-royal-gold/40 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                <span>Share Apps</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowQr(true)}
+                className={`flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  showQr
+                    ? 'bg-royal-gold/20 text-royal-champagne border border-royal-gold/40 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <QrCode className="h-3.5 w-3.5" />
+                <span>QR Code</span>
+              </button>
+            </div>
+
+            {/* QR Code View */}
             {showQr ? (
-              <div className="text-center space-y-4 py-2">
-                <div className="mx-auto flex h-60 w-60 items-center justify-center rounded-2xl bg-white p-3 shadow-lg">
+              <div className="text-center space-y-4 py-1 animate-in fade-in zoom-in-95 duration-150">
+                <div className="mx-auto flex h-60 w-60 items-center justify-center rounded-2xl bg-white p-3 shadow-2xl border-2 border-royal-gold/40">
                   <img
                     src={qrCodeUrl}
                     alt="Scan Invitation QR Code"
                     className="h-full w-full object-contain"
                   />
                 </div>
-                <p className="text-xs text-gray-300 font-sans">
-                  Guests can point their phone camera at this QR code to view the invitation instantly.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowQr(false)}
-                  className="inline-flex items-center gap-1.5 text-xs text-royal-gold hover:underline font-semibold"
-                >
-                  &larr; Back to App Options
-                </button>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-200">
+                    Scan with any phone camera or QR reader
+                  </p>
+                  <p className="text-[11px] text-gray-400 font-sans">
+                    Opens the interactive digital invitation directly on mobile devices
+                  </p>
+                </div>
+
+                {/* QR Actions: Download QR & Copy Link */}
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <a
+                    href={qrCodeUrl}
+                    download={`invitation-qr-${slug}.png`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 px-3.5 py-2 text-xs font-semibold text-white transition-all active:scale-95"
+                  >
+                    <Download className="h-3.5 w-3.5 text-royal-gold" />
+                    <span>Download QR</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-royal-gold/40 bg-royal-gold/15 hover:bg-royal-gold/25 px-3.5 py-2 text-xs font-semibold text-royal-champagne transition-all active:scale-95"
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5 text-royal-gold" />
+                    )}
+                    <span>{copied ? 'Copied Link!' : 'Copy Link'}</span>
+                  </button>
+                </div>
               </div>
             ) : (
-              <>
-                {/* Native OS Share Button (Gallery-Style sharing) */}
+              <div className="space-y-4 animate-in fade-in duration-150">
+                {/* Native OS Share Button (Phone gallery/sheet sharing) */}
                 {typeof navigator !== 'undefined' && typeof (navigator as any).share === 'function' && (
                   <button
                     type="button"
@@ -238,7 +328,7 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                       const shared = await handleNativeShare();
                       if (shared) setModalOpen(false);
                     }}
-                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-royal-gold via-royal-champagne to-royal-gold p-3 text-xs font-bold text-royal-dark shadow-gold active:scale-95 transition-all"
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-royal-gold via-royal-champagne to-royal-gold p-3 text-xs font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all"
                   >
                     <Smartphone className="h-4 w-4" />
                     <span>Open Phone Share Tray (WhatsApp, Instagram, etc.)</span>
@@ -246,7 +336,7 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                 )}
 
                 {/* Platform Icons Grid */}
-                <div className="grid grid-cols-4 gap-3 text-center">
+                <div className="grid grid-cols-4 gap-2.5 text-center">
                   {/* WhatsApp */}
                   <a
                     href={whatsappUrl}
@@ -257,7 +347,7 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md group-hover:scale-105 transition-transform">
                       <MessageCircle className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-medium text-gray-300">WhatsApp</span>
+                    <span className="text-[11px] font-medium text-gray-300 group-hover:text-white">WhatsApp</span>
                   </a>
 
                   {/* Telegram */}
@@ -270,7 +360,7 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500 text-white shadow-md group-hover:scale-105 transition-transform">
                       <Send className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-medium text-gray-300">Telegram</span>
+                    <span className="text-[11px] font-medium text-gray-300 group-hover:text-white">Telegram</span>
                   </a>
 
                   {/* Facebook */}
@@ -283,7 +373,7 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md group-hover:scale-105 transition-transform">
                       <Facebook className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-medium text-gray-300">Facebook</span>
+                    <span className="text-[11px] font-medium text-gray-300 group-hover:text-white">Facebook</span>
                   </a>
 
                   {/* X / Twitter */}
@@ -296,7 +386,7 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-white shadow-md group-hover:scale-105 transition-transform">
                       <Twitter className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-medium text-gray-300">X (Twitter)</span>
+                    <span className="text-[11px] font-medium text-gray-300 group-hover:text-white">X</span>
                   </a>
 
                   {/* Email */}
@@ -307,7 +397,7 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-600 text-white shadow-md group-hover:scale-105 transition-transform">
                       <Mail className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-medium text-gray-300">Email</span>
+                    <span className="text-[11px] font-medium text-gray-300 group-hover:text-white">Email</span>
                   </a>
 
                   {/* QR Code */}
@@ -319,10 +409,10 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-royal-gold/20 text-royal-champagne border border-royal-gold/30 shadow-md group-hover:scale-105 transition-transform">
                       <QrCode className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-medium text-gray-300">QR Code</span>
+                    <span className="text-[11px] font-medium text-gray-300 group-hover:text-royal-champagne">QR Code</span>
                   </button>
 
-                  {/* Open Link Direct */}
+                  {/* Preview */}
                   <a
                     href={fullUrl}
                     target="_blank"
@@ -332,19 +422,33 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white shadow-md group-hover:scale-105 transition-transform">
                       <ExternalLink className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-medium text-gray-300">Preview</span>
+                    <span className="text-[11px] font-medium text-gray-300 group-hover:text-white">Preview</span>
                   </a>
 
                   {/* Copy Link Tile */}
                   <button
                     type="button"
                     onClick={handleCopyLink}
-                    className="flex flex-col items-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 p-3 hover:bg-white/10 hover:border-emerald-500/50 transition-all group"
+                    className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 transition-all group ${
+                      copied
+                        ? 'border-emerald-500/50 bg-emerald-500/10'
+                        : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-royal-gold/40'
+                    }`}
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-md group-hover:scale-105 transition-transform">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-md group-hover:scale-105 transition-all ${
+                        copied
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-white/10 text-royal-champagne border border-white/10'
+                      }`}
+                    >
                       {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
                     </div>
-                    <span className="text-[11px] font-medium text-gray-300">
+                    <span
+                      className={`text-[11px] font-medium ${
+                        copied ? 'text-emerald-400 font-semibold' : 'text-gray-300 group-hover:text-royal-champagne'
+                      }`}
+                    >
                       {copied ? 'Copied!' : 'Copy'}
                     </span>
                   </button>
@@ -356,18 +460,18 @@ export const UniversalShareButton: React.FC<UniversalShareButtonProps> = ({
                     type="text"
                     readOnly
                     value={fullUrl}
-                    className="flex-1 bg-transparent px-2 text-xs text-gray-300 font-mono outline-none truncate"
+                    className="flex-1 bg-transparent px-2.5 text-xs text-gray-300 font-mono outline-none truncate selection:bg-royal-gold/30 selection:text-white"
                   />
                   <button
                     type="button"
                     onClick={handleCopyLink}
-                    className="flex items-center gap-1 rounded-xl bg-royal-gold/20 text-royal-champagne hover:bg-royal-gold/30 px-3 py-1.5 text-xs font-semibold transition-colors"
+                    className="flex items-center gap-1.5 rounded-xl bg-royal-gold/20 border border-royal-gold/30 text-royal-champagne hover:bg-royal-gold/30 px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95"
                   >
                     {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                     <span>{copied ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>

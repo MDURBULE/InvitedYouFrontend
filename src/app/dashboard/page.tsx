@@ -16,7 +16,6 @@ import {
   Share2,
   Sparkles,
   ExternalLink,
-  Check,
   CheckCircle2,
   Calendar,
   Clock,
@@ -28,7 +27,6 @@ export default function UserDashboardPage() {
   const router = useRouter();
   const [invitations, setInvitations] = useState<InvitationResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'DRAFT'>('ALL');
 
   useEffect(() => {
@@ -88,13 +86,6 @@ export default function UserDashboardPage() {
       draft: invitations.filter((i) => i.status === 'DRAFT').length,
     };
   }, [invitations]);
-
-  const handleCopyLink = (slug: string) => {
-    const url = `${window.location.origin}/i/${slug}`;
-    navigator.clipboard.writeText(url);
-    setCopiedSlug(slug);
-    setTimeout(() => setCopiedSlug(null), 2500);
-  };
 
   const handleTogglePublish = async (inv: InvitationResponse) => {
     try {
@@ -325,7 +316,7 @@ export default function UserDashboardPage() {
                   {/* Share & Live Preview Bar for Published Cards */}
                   {inv.status === 'PUBLISHED' && (
                     <div className="flex items-center gap-2">
-                      {/* Universal Share Button (Opens phone share sheet / gallery tray across WhatsApp, Instagram, etc.) */}
+                      {/* Universal Share Button (Includes Share across apps + QR code trigger) */}
                       <UniversalShareButton
                         title={inv.title}
                         honorees={inv.honorees}
@@ -333,26 +324,13 @@ export default function UserDashboardPage() {
                         venueName={inv.venueName}
                         eventDate={inv.eventDate}
                         variant="compact"
-                        className="flex-1 justify-center"
+                        className="flex-1"
                       />
-
-                      <button
-                        type="button"
-                        onClick={() => handleCopyLink(inv.slug)}
-                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/5 py-1.5 text-xs font-semibold text-gray-200 hover:bg-white/10 transition-colors"
-                      >
-                        {copiedSlug === inv.slug ? (
-                          <Check className="h-3.5 w-3.5 text-emerald-400" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                        <span>{copiedSlug === inv.slug ? 'Copied' : 'Copy'}</span>
-                      </button>
 
                       <Link
                         href={`/i/${inv.slug}`}
                         target="_blank"
-                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/20 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                         title="Open Live Keepsake Page"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -382,7 +360,7 @@ export default function UserDashboardPage() {
                     <button
                       type="button"
                       onClick={() => handleDuplicate(inv.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/20 transition-colors"
                       title="Duplicate Invitation"
                     >
                       <Copy className="h-3.5 w-3.5" />
@@ -391,7 +369,7 @@ export default function UserDashboardPage() {
                     <button
                       type="button"
                       onClick={() => handleDelete(inv.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-red-400"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-red-400 hover:border-red-500/30 transition-colors"
                       title="Delete Invitation"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
