@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/api';
 import { Sparkles, ArrowRight, Lock, Mail } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const redirect = searchParams.get('redirect') || '/dashboard';
 
   const [email, setEmail] = useState('');
@@ -38,9 +40,9 @@ function LoginContent() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-royal-ruby to-royal-gold shadow-gold">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
-          <h1 className="font-serif text-2xl font-bold text-white">Welcome Back</h1>
+          <h1 className="font-serif text-2xl font-bold text-white">{t('auth.welcomeBack')}</h1>
           <p className="text-xs text-gray-400 font-sans">
-            Sign in to manage and edit your celebration invitations.
+            {t('auth.signInSubtitle')}
           </p>
         </div>
 
@@ -53,7 +55,7 @@ function LoginContent() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-              Email Address
+              {t('auth.emailLabel')}
             </label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
@@ -62,15 +64,15 @@ function LoginContent() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-white/20 bg-white/5 pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none"
+                placeholder="name@example.com"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-xs sm:text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none focus:ring-1 focus:ring-royal-gold"
               />
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-              Password
+              {t('auth.passwordLabel')}
             </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
@@ -80,7 +82,7 @@ function LoginContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-white/20 bg-white/5 pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-xs sm:text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none focus:ring-1 focus:ring-royal-gold"
               />
             </div>
           </div>
@@ -88,20 +90,26 @@ function LoginContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-royal-gold to-royal-champagne py-3 text-sm font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all mt-2"
+            className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-royal-gold via-royal-champagne to-royal-gold py-3 text-xs sm:text-sm font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all disabled:opacity-50"
           >
-            <span>{loading ? 'Signing in...' : 'Sign In'}</span>
-            <ArrowRight className="h-4 w-4" />
+            {loading ? (
+              <span>{t('auth.signingIn')}</span>
+            ) : (
+              <>
+                <span>{t('auth.signInBtn')}</span>
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </button>
         </form>
 
         <div className="text-center pt-2 border-t border-white/10 text-xs text-gray-400 font-sans">
-          Don&apos;t have an account yet?{' '}
+          <span>{t('auth.noAccount')} </span>
           <Link
-            href={`/auth/register${redirect ? `?redirect=${redirect}` : ''}`}
-            className="text-royal-gold font-semibold hover:underline"
+            href={`/auth/register?redirect=${encodeURIComponent(redirect)}`}
+            className="text-royal-champagne font-semibold hover:underline"
           >
-            Create account
+            {t('auth.createAccountLink')}
           </Link>
         </div>
       </div>
@@ -111,7 +119,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-[85vh] items-center justify-center text-royal-champagne font-serif">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal-gold" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );

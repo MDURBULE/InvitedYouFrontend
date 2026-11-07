@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface CountdownTimerProps {
   targetDate?: string;
@@ -11,6 +12,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   targetDate,
   themeColor = '#D4AF37',
 }) => {
+  const { t, formatNumber } = useLanguage();
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
     hours: number;
@@ -55,7 +57,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
     return (
       <div className="rounded-2xl border border-royal-gold/30 bg-royal-dark/60 p-4 text-center">
         <p className="font-serif text-sm tracking-wider text-royal-champagne uppercase">
-          ✦ The celebration has commenced! ✦
+          {t('countdown.commenced', '✦ The celebration has commenced! ✦')}
         </p>
       </div>
     );
@@ -65,10 +67,10 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
     <section aria-label="Event countdown" className="my-6 px-1">
       <div className="grid grid-cols-4 gap-1.5 sm:gap-3 max-w-md mx-auto">
         {[
-          { label: 'Days', value: timeLeft.days },
-          { label: 'Hours', value: timeLeft.hours },
-          { label: 'Mins', value: timeLeft.minutes },
-          { label: 'Secs', value: timeLeft.seconds },
+          { label: t('countdown.days', 'Days'), value: timeLeft.days },
+          { label: t('countdown.hours', 'Hours'), value: timeLeft.hours },
+          { label: t('countdown.minutes', 'Mins'), value: timeLeft.minutes },
+          { label: t('countdown.seconds', 'Secs'), value: timeLeft.seconds },
         ].map((item, idx) => (
           <div
             key={idx}

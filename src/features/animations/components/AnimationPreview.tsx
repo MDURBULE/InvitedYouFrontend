@@ -5,6 +5,7 @@ import { AnimationConfig, DesignConfig, TemplateResponse } from '@/types';
 import { AnimatedInvitationRenderer } from './AnimatedInvitationRenderer';
 import { getSampleDataForCategory } from '@/lib/sampleCelebrationData';
 import { X, RefreshCw } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AnimationPreviewModalProps {
   template: TemplateResponse;
@@ -17,6 +18,7 @@ export const AnimationPreviewModal: React.FC<AnimationPreviewModalProps> = ({
   onClose,
   onSelect,
 }) => {
+  const { t } = useLanguage();
   const [replayKey, setReplayKey] = useState(0);
 
   const handleReplay = () => {
@@ -34,7 +36,7 @@ export const AnimationPreviewModal: React.FC<AnimationPreviewModalProps> = ({
         <div className="flex items-center justify-between border-b border-white/10 px-3 sm:px-6 py-2.5 sm:py-4 bg-black/40">
           <div className="max-w-[120px] xs:max-w-[180px] sm:max-w-xs">
             <span className="hidden xs:block text-[10px] uppercase tracking-widest text-royal-gold font-sans font-semibold">
-              Live Animation Preview
+              {t('hero.livePreviewBadge')}
             </span>
             <h3 className="font-serif text-sm sm:text-lg font-bold text-white truncate">
               {template.name}
@@ -46,10 +48,10 @@ export const AnimationPreviewModal: React.FC<AnimationPreviewModalProps> = ({
               type="button"
               onClick={handleReplay}
               className="flex items-center gap-1 sm:gap-1.5 rounded-full border border-white/20 bg-white/10 px-2 sm:px-3 py-1.5 text-xs text-royal-champagne hover:bg-white/20 transition-colors"
-              title="Replay Animation"
+              title={t('hero.resetDemo')}
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Replay</span>
+              <span className="hidden sm:inline">{t('hero.resetDemo')}</span>
             </button>
 
             {onSelect && (
@@ -58,7 +60,7 @@ export const AnimationPreviewModal: React.FC<AnimationPreviewModalProps> = ({
                 onClick={onSelect}
                 className="rounded-full bg-gradient-to-r from-royal-gold to-royal-champagne px-3 sm:px-4 py-1.5 text-xs font-bold text-royal-dark shadow-gold hover:opacity-95 transition-opacity"
               >
-                Use Template
+                {t('templatesPage.useTemplate')}
               </button>
             )}
 
@@ -66,6 +68,7 @@ export const AnimationPreviewModal: React.FC<AnimationPreviewModalProps> = ({
               type="button"
               onClick={onClose}
               className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label={t('common.close')}
             >
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>

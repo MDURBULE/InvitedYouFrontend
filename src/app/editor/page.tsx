@@ -32,10 +32,12 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { Suspense } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function InvitationEditorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, locale } = useLanguage();
   const templateIdParam = searchParams.get('templateId') || 'royal-rajwada-wedding';
   const invitationIdParam = searchParams.get('id');
 
@@ -102,85 +104,42 @@ function InvitationEditorContent() {
     bodyFont: 'Outfit',
   });
 
+  // UI state
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
-  // Load template details
+  // Load Template or Existing Invitation
   useEffect(() => {
     async function loadTemplate() {
-      const applySampleDetails = (cat: string) => {
-        if (!invitationIdParam) {
-          const sample = getSampleDataForCategory(cat);
-          setTitle(sample.title);
-          setHonorees(sample.honorees);
-          setHosts(sample.hosts);
-          setEventDate(sample.eventDate);
-          setVenueName(sample.venueName);
-          setVenueAddress(sample.venueAddress);
-          setGoogleMapsUrl(sample.googleMapsUrl);
-          setSlug(`${sample.slug}-${Math.floor(1000 + Math.random() * 9000)}`);
-          setFunctions(sample.functions);
-          setMediaGallery(sample.mediaGallery);
-        }
-      };
-
-      // Check if it matches any curated template by id
-      const curated = CURATED_TEMPLATES.find(
-        (t) => String(t.id) === String(templateIdParam)
-      );
-      if (curated) {
-        setTemplate(curated);
-        const cat = (curated.category as string) || 'WEDDING';
-        setEventCategory(cat);
-        applySampleDetails(cat);
-        if (curated.defaultAnimationConfig) {
-          try {
-            setAnimConfig(JSON.parse(curated.defaultAnimationConfig));
-          } catch {}
-        }
-        if (curated.defaultDesignConfig) {
-          try {
-            setDesignConfig(JSON.parse(curated.defaultDesignConfig));
-          } catch {}
-        }
-        return;
-      }
-
       try {
-        const tmpl = await templatesApi.getTemplateById(templateIdParam);
-        setTemplate(tmpl);
-        const cat = (tmpl.category as string) || 'WEDDING';
-        setEventCategory(cat);
-        applySampleDetails(cat);
-        if (tmpl.defaultAnimationConfig) {
+        const data = await templatesApi.getTemplateById(templateIdParam);
+        setTemplate(data);
+        if (data.defaultAnimationConfig) {
           try {
-            setAnimConfig(JSON.parse(tmpl.defaultAnimationConfig));
-          } catch {}
-        }
-        if (tmpl.defaultDesignConfig) {
-          try {
-            setDesignConfig(JSON.parse(tmpl.defaultDesignConfig));
-          } catch {}
-        }
-      } catch (e) {
-        // Graceful fallback to default curated template
-        const fallback = CURATED_TEMPLATES[0];
-        if (fallback) {
-          setTemplate(fallback);
-          const cat = (fallback.category as string) || 'WEDDING';
-          setEventCategory(cat);
-          applySampleDetails(cat);
-          if (fallback.defaultAnimationConfig) {
-            try {
-              setAnimConfig(JSON.parse(fallback.defaultAnimationConfig));
-            } catch {}
+            setAnimConfig(JSON.parse(data.defaultAnimationConfig));
+          } catch {
+            // fallback
           }
-          if (fallback.defaultDesignConfig) {
+        }
+        if (data.defaultDesignConfig) {
+          try {
+            setDesignConfig(JSON.parse(data.defaultDesignConfig));
+          } catch {
+            // fallback
+          }
+        }
+      } catch (err) {
+        const curated = CURATED_TEMPLATES.find((t) => t.id === templateIdParam);
+        if (curated) {
+          setTemplate(curated);
+          if (curated.defaultAnimationConfig) {
             try {
-              setDesignConfig(JSON.parse(fallback.defaultDesignConfig));
-            } catch {}
+              setAnimConfig(JSON.parse(curated.defaultAnimationConfig));
+            } catch {
+              // fallback
+            }
           }
         }
       }
@@ -188,7 +147,6 @@ function InvitationEditorContent() {
     loadTemplate();
   }, [templateIdParam]);
 
-  // Load existing invitation if ID provided
   useEffect(() => {
     if (!invitationIdParam) return;
     async function loadExisting() {
@@ -196,36 +154,47 @@ function InvitationEditorContent() {
         const inv = await invitationsApi.getInvitationById(Number(invitationIdParam));
         setTitle(inv.title);
         setEventCategory(inv.eventCategory);
-        if (inv.honorees) setHonorees(inv.honorees);
-        if (inv.hosts) setHosts(inv.hosts);
-        if (inv.eventDate) setEventDate(inv.eventDate.substring(0, 16));
-        if (inv.venueName) setVenueName(inv.venueName);
-        if (inv.venueAddress) setVenueAddress(inv.venueAddress);
-        if (inv.googleMapsUrl) setGoogleMapsUrl(inv.googleMapsUrl);
-        if (inv.musicUrl) setMusicUrl(inv.musicUrl);
-        if (inv.slug) setSlug(inv.slug);
+        setHosts(inv.hosts || '');
+        setHonorees(inv.honorees || '');
+        if (inv.eventDate) {
+          setEventDate(inv.eventDate.substring(0, 16));
+        }
+        setVenueName(inv.venueName || '');
+        setVenueAddress(inv.venueAddress || '');
+        setGoogleMapsUrl(inv.googleMapsUrl || '');
+        setMusicUrl(inv.musicUrl || '');
+        setSlug(inv.slug);
+
         if (inv.functions) {
           try {
             setFunctions(JSON.parse(inv.functions));
-          } catch {}
-        }
-        if (inv.mediaGallery) {
-          try {
-            setMediaGallery(JSON.parse(inv.mediaGallery));
-          } catch {}
-        }
-        if (inv.animationConfig) {
-          try {
-            setAnimConfig(JSON.parse(inv.animationConfig));
-          } catch {}
+          } catch {
+            // fallback
+          }
         }
         if (inv.designConfig) {
           try {
             setDesignConfig(JSON.parse(inv.designConfig));
-          } catch {}
+          } catch {
+            // fallback
+          }
+        }
+        if (inv.animationConfig) {
+          try {
+            setAnimConfig(JSON.parse(inv.animationConfig));
+          } catch {
+            // fallback
+          }
+        }
+        if (inv.mediaGallery) {
+          try {
+            setMediaGallery(JSON.parse(inv.mediaGallery));
+          } catch {
+            // fallback
+          }
         }
       } catch (e) {
-        // failed or not authorized
+        // failed
       }
     }
     loadExisting();
@@ -234,7 +203,7 @@ function InvitationEditorContent() {
   const handleSave = async (publish: boolean = false) => {
     const token = getAuthToken();
     if (!token) {
-      alert('Please sign in or create an account to save and publish your invitation.');
+      alert(locale === 'mr' ? 'कृपया लॉग इन किंवा साइन अप करा' : locale === 'hi' ? 'कृपया पहले साइन इन करें' : 'Please sign in or create an account to save and publish your invitation.');
       router.push('/auth/login?redirect=/editor');
       return;
     }
@@ -292,7 +261,7 @@ function InvitationEditorContent() {
       ...prev,
       {
         id: Date.now().toString(),
-        name: 'New Function / Reception',
+        name: locale === 'mr' ? 'नवीन विधी / स्वागत समारंभ' : locale === 'hi' ? 'नई रस्म / रिसेप्शन' : 'New Function / Reception',
         date: '',
         time: '',
         venueName: venueName || '',
@@ -347,10 +316,10 @@ function InvitationEditorContent() {
           </button>
           <div className="max-w-[110px] xs:max-w-[160px] sm:max-w-xs md:max-w-md">
             <span className="hidden xs:block text-[10px] uppercase tracking-widest text-royal-gold font-sans font-semibold">
-              Invitation Studio
+              {invitationIdParam ? t('editor.pageTitleEdit') : t('editor.pageTitleNew')}
             </span>
             <h2 className="font-serif text-xs sm:text-base font-bold text-white truncate">
-              {title || 'Untitled Celebration'}
+              {title || 'Celebration Invitation'}
             </h2>
           </div>
         </div>
@@ -363,7 +332,7 @@ function InvitationEditorContent() {
             className="lg:hidden flex items-center gap-1 rounded-full border border-royal-gold/40 bg-royal-gold/15 px-2.5 py-1.5 text-xs font-semibold text-royal-champagne"
           >
             <Eye className="h-3.5 w-3.5 text-royal-gold" />
-            <span>{showMobilePreview ? 'Edit' : 'Preview'}</span>
+            <span>{showMobilePreview ? t('common.edit') : t('common.preview')}</span>
           </button>
 
           <button
@@ -373,8 +342,7 @@ function InvitationEditorContent() {
             className="flex items-center gap-1 sm:gap-1.5 rounded-full border border-royal-gold/40 bg-white/5 px-2.5 sm:px-4 py-1.5 text-xs font-semibold text-royal-champagne hover:bg-white/10 transition-colors active:scale-95"
           >
             <Save className="h-3.5 w-3.5" />
-            <span>{saving ? '...' : saveSuccess ? '✓ Saved' : 'Save'}</span>
-            <span className="hidden sm:inline">{!saving && !saveSuccess && ' Draft'}</span>
+            <span>{saving ? '...' : saveSuccess ? '✓ ' + t('common.saved') : t('editor.saveDraftBtn')}</span>
           </button>
 
           <button
@@ -384,8 +352,7 @@ function InvitationEditorContent() {
             className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-gradient-to-r from-royal-gold to-royal-champagne px-2.5 sm:px-5 py-1.5 text-xs font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all"
           >
             <Globe className="h-3.5 w-3.5" />
-            <span>Publish</span>
-            <span className="hidden sm:inline"> Live</span>
+            <span>{t('editor.publishBtn')}</span>
           </button>
         </div>
       </div>
@@ -403,11 +370,11 @@ function InvitationEditorContent() {
           {/* Navigation Tabs */}
           <div className="flex border-b border-white/10 overflow-x-auto no-scrollbar scrollbar-none text-xs font-sans font-medium text-gray-400 bg-black/20">
             {[
-              { id: 'DETAILS', label: 'Details' },
-              { id: 'FUNCTIONS', label: 'Schedule' },
-              { id: 'VENUE', label: 'Venue' },
-              { id: 'MEDIA', label: 'Photos' },
-              { id: 'ANIMATION', label: '✨ Animation Studio' },
+              { id: 'DETAILS', label: t('editor.tabDetails') },
+              { id: 'FUNCTIONS', label: t('editor.tabFunctions') },
+              { id: 'VENUE', label: t('editor.tabVenue') },
+              { id: 'MEDIA', label: t('editor.tabMedia') },
+              { id: 'ANIMATION', label: t('editor.tabAnimation') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -430,30 +397,20 @@ function InvitationEditorContent() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Celebration Title *
+                    {t('editor.titleLabel')} *
                   </label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder={
-                      eventCategory === 'HOUSEWARMING'
-                        ? 'e.g. Shubh Griha Pravesh & Vastu Shanti Puja'
-                        : eventCategory === 'BIRTHDAY'
-                        ? "e.g. Aarav's 1st Birthday Wonder Bash"
-                        : eventCategory === 'ANNIVERSARY'
-                        ? 'e.g. 25th Silver Jubilee Anniversary Celebration'
-                        : eventCategory === 'BABY_SHOWER'
-                        ? 'e.g. Baby Shower & Godh Bharai Celebration'
-                        : 'e.g. Wedding Ceremony & Grand Reception'
-                    }
+                    placeholder="e.g. Wedding Ceremony & Reception"
                     className="w-full rounded-xl border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Event Category
+                    {t('editor.categoryLabel')}
                   </label>
                   <select
                     value={eventCategory}
@@ -473,70 +430,46 @@ function InvitationEditorContent() {
                     }}
                     className="w-full rounded-xl border border-white/20 bg-[#1A1C29] px-3.5 py-2.5 text-sm text-white focus:border-royal-gold focus:outline-none"
                   >
-                    <option value="WEDDING">Wedding</option>
-                    <option value="ENGAGEMENT">Engagement</option>
-                    <option value="BIRTHDAY">Birthday</option>
-                    <option value="ANNIVERSARY">Anniversary</option>
-                    <option value="HOUSEWARMING">Griha Pravesh</option>
-                    <option value="BABY_SHOWER">Baby Shower</option>
-                    <option value="FESTIVAL">Festival</option>
-                    <option value="OTHER">Other Celebration</option>
+                    <option value="WEDDING">{t('categories.wedding')}</option>
+                    <option value="ENGAGEMENT">{t('categories.engagement')}</option>
+                    <option value="BIRTHDAY">{t('categories.birthday')}</option>
+                    <option value="ANNIVERSARY">{t('categories.anniversary')}</option>
+                    <option value="HOUSEWARMING">{t('categories.housewarming')}</option>
+                    <option value="BABY_SHOWER">{t('categories.babyShower')}</option>
+                    <option value="FESTIVAL">{t('categories.festival')}</option>
+                    <option value="OTHER">{t('categories.other')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    {eventCategory === 'HOUSEWARMING'
-                      ? 'Family / Host Names *'
-                      : eventCategory === 'BIRTHDAY'
-                      ? 'Birthday Star / Honoree Name *'
-                      : eventCategory === 'BABY_SHOWER'
-                      ? 'Mom-to-Be / Baby Name *'
-                      : 'Honorees / Couple Names *'}
+                    {t('editor.honoreesLabel')} *
                   </label>
                   <input
                     type="text"
                     value={honorees}
                     onChange={(e) => setHonorees(e.target.value)}
-                    placeholder={
-                      eventCategory === 'HOUSEWARMING'
-                        ? 'e.g. The Sharma Family (Rajesh & Sunita)'
-                        : eventCategory === 'BIRTHDAY'
-                        ? 'e.g. Aarav Sharma'
-                        : eventCategory === 'BABY_SHOWER'
-                        ? 'e.g. Celebrating Mom-to-Be Sneha'
-                        : 'e.g. Siddharth & Ananya'
-                    }
+                    placeholder={t('editor.honoreesPlaceholder')}
                     className="w-full rounded-xl border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    {eventCategory === 'HOUSEWARMING'
-                      ? 'Welcoming Family / Elders'
-                      : eventCategory === 'BIRTHDAY'
-                      ? 'Organized By (Parents / Hosts)'
-                      : 'Hosts / Parents Announcement'}
+                    {t('editor.hostsLabel')}
                   </label>
                   <input
                     type="text"
                     value={hosts}
                     onChange={(e) => setHosts(e.target.value)}
-                    placeholder={
-                      eventCategory === 'HOUSEWARMING'
-                        ? 'e.g. Sunita & Rajesh Sharma'
-                        : eventCategory === 'BIRTHDAY'
-                        ? 'e.g. Pooja & Vikram Sharma'
-                        : 'e.g. Mr. & Mrs. Sharma & Mr. & Mrs. Verma'
-                    }
+                    placeholder={t('editor.hostsPlaceholder')}
                     className="w-full rounded-xl border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:border-royal-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Primary Event Date & Time
+                    {t('editor.eventDateLabel')}
                   </label>
                   <input
                     type="datetime-local"
@@ -548,7 +481,7 @@ function InvitationEditorContent() {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Custom Web Link (Slug)
+                    {t('editor.slugLabel')}
                   </label>
                   <div className="flex items-center rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-xs text-gray-400">
                     <span>invitedyou.com/i/</span>
@@ -563,6 +496,7 @@ function InvitationEditorContent() {
                       className="flex-1 bg-transparent text-white font-medium focus:outline-none ml-1"
                     />
                   </div>
+                  <p className="mt-1 text-[11px] text-gray-400">{t('editor.slugHelp')}</p>
                 </div>
               </div>
             )}
@@ -572,7 +506,7 @@ function InvitationEditorContent() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-serif text-sm font-semibold text-white uppercase tracking-wider">
-                    Ceremony Functions
+                    {t('editor.functionsTitle')}
                   </h3>
                   <button
                     type="button"
@@ -580,7 +514,7 @@ function InvitationEditorContent() {
                     className="flex items-center gap-1 rounded-full border border-royal-gold/40 bg-royal-gold/10 px-3 py-1 text-xs text-royal-champagne hover:bg-royal-gold/20"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    <span>Add Function</span>
+                    <span>{t('editor.addFunctionBtn')}</span>
                   </button>
                 </div>
 
@@ -594,14 +528,14 @@ function InvitationEditorContent() {
                         type="button"
                         onClick={() => removeFunction(fn.id)}
                         className="absolute right-3 top-3 text-gray-400 hover:text-red-400"
-                        title="Remove function"
+                        title={t('editor.removeFunction')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
 
                       <div>
                         <label className="block text-[11px] text-gray-400 uppercase font-semibold mb-1">
-                          Function #{idx + 1} Name
+                          {t('editor.functionNameLabel')} #{idx + 1}
                         </label>
                         <input
                           type="text"
@@ -621,7 +555,7 @@ function InvitationEditorContent() {
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block text-[11px] text-gray-400 uppercase font-semibold mb-1">
-                            Date / Day
+                            {t('editor.functionDateLabel')}
                           </label>
                           <input
                             type="text"
@@ -640,7 +574,7 @@ function InvitationEditorContent() {
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-400 uppercase font-semibold mb-1">
-                            Auspicious Time
+                            {t('editor.functionTimeLabel')}
                           </label>
                           <input
                             type="text"
@@ -661,7 +595,7 @@ function InvitationEditorContent() {
 
                       <div>
                         <label className="block text-[11px] text-gray-400 uppercase font-semibold mb-1">
-                          Dress Code / Attire
+                          {t('editor.functionDressLabel')}
                         </label>
                         <input
                           type="text"
@@ -689,7 +623,7 @@ function InvitationEditorContent() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Venue Name
+                    {t('editor.venueNameLabel')}
                   </label>
                   <input
                     type="text"
@@ -702,7 +636,7 @@ function InvitationEditorContent() {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Full Venue Address
+                    {t('editor.venueAddressLabel')}
                   </label>
                   <textarea
                     rows={3}
@@ -715,7 +649,7 @@ function InvitationEditorContent() {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Google Maps URL (Optional)
+                    {t('editor.googleMapsUrlLabel')}
                   </label>
                   <input
                     type="url"
@@ -724,9 +658,6 @@ function InvitationEditorContent() {
                     placeholder="https://maps.app.goo.gl/..."
                     className="w-full rounded-xl border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white focus:border-royal-gold focus:outline-none"
                   />
-                  <p className="mt-1 text-[11px] text-gray-400">
-                    If left empty, a smart Google Maps search will automatically be generated from the venue name and address.
-                  </p>
                 </div>
               </div>
             )}
@@ -736,11 +667,11 @@ function InvitationEditorContent() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-serif text-sm font-semibold text-white uppercase tracking-wider">
-                    Gallery Photos
+                    {t('editor.mediaTitle')}
                   </h3>
                   <label className="flex items-center gap-1.5 rounded-full bg-royal-gold text-royal-dark px-3 py-1 text-xs font-bold cursor-pointer hover:opacity-90">
                     <Upload className="h-3.5 w-3.5" />
-                    <span>Upload Photo</span>
+                    <span>{t('editor.addPhotoBtn')}</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -772,7 +703,7 @@ function InvitationEditorContent() {
 
                 <div className="pt-4 border-t border-white/10">
                   <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                    Ceremonial Background Music (Audio URL)
+                    {t('editor.musicUrlLabel')}
                   </label>
                   <input
                     type="url"
@@ -782,7 +713,7 @@ function InvitationEditorContent() {
                     className="w-full rounded-xl border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white focus:border-royal-gold focus:outline-none"
                   />
                   <p className="mt-1 text-[11px] text-gray-400">
-                    Provide an MP3 audio URL to set an auspicious ambiance when guests open the card.
+                    {t('editor.musicUrlHelp')}
                   </p>
                 </div>
               </div>
@@ -793,16 +724,16 @@ function InvitationEditorContent() {
               <div className="space-y-6">
                 <div>
                   <span className="text-xs uppercase tracking-widest text-royal-gold font-serif font-semibold">
-                    Opening Sequence Preset
+                    {t('editor.animationPresetLabel')}
                   </span>
                   <div className="mt-2 grid grid-cols-2 gap-2.5">
                     {[
-                      { id: 'envelope-reveal', label: 'Wax Seal Envelope', desc: 'Fold & slide card' },
-                      { id: 'royal-curtain-doors', label: 'Royal Palace Doors', desc: '3D door parting' },
-                      { id: 'botanical-bloom', label: 'Botanical Bloom', desc: 'Growing vines & petals' },
-                      { id: 'celebration-pop', label: 'Celebration Pop', desc: 'Festive confetti burst' },
-                      { id: 'modern-cinematic', label: 'Modern Cinematic', desc: 'Hero photo fade' },
-                      { id: 'none', label: 'Static (No Opening)', desc: 'Instant card display' },
+                      { id: 'envelope-reveal', label: locale === 'mr' ? 'मेणाची राजमुद्रा' : locale === 'hi' ? 'वैक्स सील लिफाफा' : 'Wax Seal Envelope', desc: 'Fold & slide card' },
+                      { id: 'royal-curtain-doors', label: locale === 'mr' ? 'राजवाडा महाद्वार' : locale === 'hi' ? 'शाही महल द्वार' : 'Royal Palace Doors', desc: '3D door parting' },
+                      { id: 'botanical-bloom', label: locale === 'mr' ? 'पुष्पवाटिका' : locale === 'hi' ? 'पुष्प वाटिका' : 'Botanical Bloom', desc: 'Growing vines & petals' },
+                      { id: 'celebration-pop', label: locale === 'mr' ? 'रंगबिरंगी उत्सव' : locale === 'hi' ? 'उत्सव कन्फ़ेटी' : 'Celebration Pop', desc: 'Festive confetti burst' },
+                      { id: 'modern-cinematic', label: locale === 'mr' ? 'आधुनिक सिनेमा' : locale === 'hi' ? 'आधुनिक सिनेमाई' : 'Modern Cinematic', desc: 'Hero photo fade' },
+                      { id: 'none', label: locale === 'mr' ? 'साधे (अ‍ॅनिमेशन नाही)' : locale === 'hi' ? 'स्थिर (एनिमेशन रहित)' : 'Static (No Opening)', desc: 'Instant card display' },
                     ].map((preset) => (
                       <button
                         key={preset.id}
@@ -825,7 +756,7 @@ function InvitationEditorContent() {
                 {animConfig.preset !== 'none' && (
                   <div>
                     <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                      Motion Intensity
+                      {t('editor.animationIntensityLabel')}
                     </label>
                     <div className="grid grid-cols-3 gap-2">
                       {(['subtle', 'balanced', 'expressive'] as AnimationIntensity[]).map((tier) => (
@@ -855,10 +786,10 @@ function InvitationEditorContent() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="block text-xs font-semibold text-white">
-                          Floating Decorative Particles
+                          {t('editor.enableParticles')}
                         </span>
                         <span className="block text-[11px] text-gray-400">
-                          Lightweight gold dust or rose petal particles
+                          {t('editor.particleEffectLabel')}
                         </span>
                       </div>
                       <input
@@ -889,7 +820,11 @@ function InvitationEditorContent() {
                                 : 'bg-black/30 text-gray-400 border border-transparent'
                             }`}
                           >
-                            {pType.replace('-', ' ')}
+                            {pType === 'gold-dust'
+                              ? t('editor.particleTypeGold')
+                              : pType === 'rose-petals'
+                              ? t('editor.particleTypePetals')
+                              : t('editor.particleTypeConfetti')}
                           </button>
                         ))}
                       </div>
@@ -905,7 +840,7 @@ function InvitationEditorContent() {
                     className="w-full flex items-center justify-center gap-2 rounded-xl border border-royal-gold/50 bg-royal-gold/10 py-2.5 text-xs font-bold text-royal-champagne hover:bg-royal-gold/20 transition-all shadow-md"
                   >
                     <Sparkles className="h-4 w-4 text-royal-gold" />
-                    <span>Replay Opening Animation</span>
+                    <span>{t('invitationView.replayAnimation')}</span>
                   </button>
                 </div>
               </div>
@@ -923,9 +858,9 @@ function InvitationEditorContent() {
         >
           <div className="flex items-center justify-between border-b border-white/10 px-3 sm:px-6 py-2.5 bg-black/40">
             <span className="text-[10px] uppercase tracking-widest text-royal-gold font-sans font-semibold">
-              Live Preview &bull; {animConfig.preset}
+              {t('hero.livePreviewBadge')} &bull; {animConfig.preset}
             </span>
-            <span className="text-[10px] text-gray-400">Updates live</span>
+            <span className="text-[10px] text-gray-400">Live</span>
           </div>
 
           <div className="flex-1 p-1.5 sm:p-6 flex justify-center pb-20 lg:pb-6">
@@ -960,7 +895,7 @@ function InvitationEditorContent() {
                 className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-royal-gold to-royal-champagne text-royal-dark px-5 py-2.5 text-xs font-bold shadow-gold active:scale-95 transition-transform"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Return to Edit Mode</span>
+                <span>Return to Edit</span>
               </button>
             </div>
           )}

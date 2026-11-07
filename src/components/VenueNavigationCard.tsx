@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { MapPin, Navigation, Copy, Check, ExternalLink } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface VenueNavigationCardProps {
   venueName?: string;
@@ -16,6 +17,7 @@ export const VenueNavigationCard: React.FC<VenueNavigationCardProps> = ({
   googleMapsUrl,
   themeColor = '#D4AF37',
 }) => {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   if (!venueName && !venueAddress) return null;
@@ -50,7 +52,7 @@ export const VenueNavigationCard: React.FC<VenueNavigationCardProps> = ({
         </div>
         <div className="flex-1">
           <span className="text-[10px] uppercase tracking-widest text-royal-gold font-sans font-semibold">
-            Venue & Location
+            {t('invitationView.venueTitle')}
           </span>
           {venueName && (
             <h4 className="font-serif text-base sm:text-lg font-bold text-white mt-0.5 break-words">
@@ -74,7 +76,7 @@ export const VenueNavigationCard: React.FC<VenueNavigationCardProps> = ({
           className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-royal-gold to-royal-champagne px-4 py-2.5 text-xs font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all"
         >
           <Navigation className="h-4 w-4" />
-          Google Maps
+          <span>{t('invitationView.googleMaps')}</span>
         </a>
 
         <a
@@ -84,7 +86,7 @@ export const VenueNavigationCard: React.FC<VenueNavigationCardProps> = ({
           className="flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-medium text-white hover:bg-white/20 active:scale-95 transition-all"
         >
           <ExternalLink className="h-4 w-4" />
-          Apple Maps
+          <span>{t('invitationView.appleMaps')}</span>
         </a>
 
         <button
@@ -93,7 +95,7 @@ export const VenueNavigationCard: React.FC<VenueNavigationCardProps> = ({
           className="flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-medium text-white hover:bg-white/20 active:scale-95 transition-all"
         >
           {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-          {copied ? 'Copied!' : 'Copy Address'}
+          <span>{copied ? t('invitationView.addressCopied') : t('invitationView.copyAddress')}</span>
         </button>
       </div>
     </div>

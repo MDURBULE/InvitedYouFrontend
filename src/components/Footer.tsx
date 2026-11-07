@@ -4,9 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sparkles, Heart } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export const Footer: React.FC = () => {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   // Hide on public invitation view
   if (pathname.startsWith('/i/')) {
@@ -26,34 +29,39 @@ export const Footer: React.FC = () => {
             </span>
           </div>
           <p className="text-xs font-sans leading-relaxed text-gray-400">
-            Elegant, modern, and memorable digital invitations. Crafted with royal aesthetics, fluid
-            motion, and seamless WhatsApp sharing for guests worldwide.
+            {t('footer.tagline')}
           </p>
+          <div className="pt-2">
+            <span className="text-[11px] text-gray-400 font-sans block mb-1.5 uppercase tracking-wider">
+              Language / भाषा:
+            </span>
+            <LanguageSwitcher variant="footer" />
+          </div>
         </div>
 
         <div>
           <h4 className="font-serif text-sm font-semibold text-white uppercase tracking-wider mb-3">
-            Occasions
+            {t('footer.occasions')}
           </h4>
           <ul className="space-y-2 text-xs font-sans">
             <li>
               <Link href="/templates?category=WEDDING" className="hover:text-royal-gold transition-colors">
-                Royal Wedding Invitations
+                {t('categories.wedding')}
               </Link>
             </li>
             <li>
               <Link href="/templates?category=ENGAGEMENT" className="hover:text-royal-gold transition-colors">
-                Engagement & Ring Ceremonies
+                {t('categories.engagement')}
               </Link>
             </li>
             <li>
               <Link href="/templates?category=BIRTHDAY" className="hover:text-royal-gold transition-colors">
-                Milestone Birthday Celebrations
+                {t('categories.birthday')}
               </Link>
             </li>
             <li>
               <Link href="/templates?category=HOUSEWARMING" className="hover:text-royal-gold transition-colors">
-                Griha Pravesh & Home Pooja
+                {t('categories.housewarming')}
               </Link>
             </li>
           </ul>
@@ -61,44 +69,42 @@ export const Footer: React.FC = () => {
 
         <div>
           <h4 className="font-serif text-sm font-semibold text-white uppercase tracking-wider mb-3">
-            Animation Presets
+            {t('footer.presets')}
           </h4>
           <ul className="space-y-2 text-xs font-sans">
             <li className="flex items-center gap-1.5">
-              <span className="text-royal-gold">💌</span> Envelope Reveal & Wax Seal
+              <span className="text-royal-gold">💌</span> {t('invitationOpening.tapRoyalSeal')}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-royal-gold">🚪</span> Royal Palace Doors Parting
+              <span className="text-royal-gold">🚪</span> {t('invitationOpening.tapPalaceDoors')}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-royal-gold">🌿</span> Botanical Bloom & Vines
+              <span className="text-royal-gold">🌿</span> {t('invitationOpening.bloomInvitation')}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-royal-gold">🎉</span> Festive Confetti Celebration
+              <span className="text-royal-gold">🎉</span> {t('invitationOpening.popToReveal')}
             </li>
           </ul>
         </div>
 
         <div>
           <h4 className="font-serif text-sm font-semibold text-white uppercase tracking-wider mb-3">
-            Guest Guarantee
+            {t('footer.guestGuarantee')}
           </h4>
           <p className="text-xs font-sans leading-relaxed text-gray-400">
-            Zero guest registration, instant mobile browser rendering, one-tap venue directions, and
-            full calendar support.
+            {t('footer.guaranteeText')}
           </p>
           <div className="mt-4 flex items-center gap-1 text-xs text-gray-400 font-sans">
-            <span>Made with</span>
+            <span>{t('footer.madeWithLove')}</span>
             <Heart className="h-3.5 w-3.5 text-royal-ruby fill-royal-ruby" />
-            <span>for life&apos;s grand celebrations</span>
           </div>
           <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-3 text-xs text-gray-400 font-sans">
             <Link href="/privacy" className="hover:text-royal-champagne transition-colors">
-              Privacy Policy
+              {t('footer.privacyPolicy')}
             </Link>
             <span className="text-white/20">•</span>
             <Link href="/terms" className="hover:text-royal-champagne transition-colors">
-              Terms &amp; Conditions
+              {t('footer.termsConditions')}
             </Link>
           </div>
         </div>
@@ -106,15 +112,15 @@ export const Footer: React.FC = () => {
 
       <div className="mx-auto max-w-7xl mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 font-sans text-center sm:text-left">
         <div>
-          &copy; {new Date().getFullYear()} InvitedYou. All rights reserved.
+          &copy; {new Date().getFullYear()} InvitedYou. {t('footer.allRightsReserved')}
         </div>
         <div className="flex items-center gap-4 sm:gap-6">
           <Link href="/privacy" className="hover:text-royal-champagne transition-colors">
-            Privacy Policy
+            {t('footer.privacyPolicy')}
           </Link>
           <span className="text-white/20">•</span>
           <Link href="/terms" className="hover:text-royal-champagne transition-colors">
-            Terms &amp; Conditions
+            {t('footer.termsConditions')}
           </Link>
         </div>
       </div>

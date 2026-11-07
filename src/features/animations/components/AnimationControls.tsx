@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { RotateCcw, Volume2, VolumeX, ArrowDown } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface AnimationControlsProps {
   allowReplay: boolean;
@@ -20,19 +22,24 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   onToggleAudio,
   onScrollToDetails,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <aside
       aria-label="Invitation controls"
       className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-1.5 sm:gap-2 rounded-full border border-royal-gold/40 bg-royal-dark/90 p-1 sm:p-1.5 backdrop-blur-md shadow-gold transition-all"
     >
+      {/* Quick Language Switcher on Live Invitation */}
+      <LanguageSwitcher variant="floating" />
+
       {/* Background Music Toggle */}
       {hasMusic && (
         <button
           type="button"
           onClick={onToggleAudio}
           className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-royal-ruby/80 text-royal-champagne hover:bg-royal-ruby transition-colors"
-          title={isPlayingAudio ? 'Mute Music' : 'Play Ceremonial Music'}
-          aria-label={isPlayingAudio ? 'Mute Music' : 'Play Ceremonial Music'}
+          title={isPlayingAudio ? t('invitationView.muteMusic') : t('invitationView.playMusic')}
+          aria-label={isPlayingAudio ? t('invitationView.muteMusic') : t('invitationView.playMusic')}
         >
           {isPlayingAudio ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
         </button>
@@ -44,8 +51,8 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
           type="button"
           onClick={onReplay}
           className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/10 text-royal-champagne hover:bg-white/20 transition-colors"
-          title="Replay Opening Sequence"
-          aria-label="Replay Opening Sequence"
+          title={t('invitationView.replayAnimation')}
+          aria-label={t('invitationView.replayAnimation')}
         >
           <RotateCcw className="h-4 w-4" />
         </button>
@@ -57,8 +64,8 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
           type="button"
           onClick={onScrollToDetails}
           className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/10 text-royal-champagne hover:bg-white/20 transition-colors"
-          title="Jump to Venue & Details"
-          aria-label="Jump to Venue & Details"
+          title={t('invitationView.scrollToDetails')}
+          aria-label={t('invitationView.scrollToDetails')}
         >
           <ArrowDown className="h-4 w-4" />
         </button>

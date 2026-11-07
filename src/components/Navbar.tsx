@@ -6,10 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Sparkles, PlusCircle, LayoutDashboard, LogIn, LogOut, User, Menu, X } from 'lucide-react';
 import { authApi, getStoredUser } from '@/lib/api';
 import { AuthUser } from '@/types';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLanguage();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -43,7 +46,7 @@ export const Navbar: React.FC = () => {
               Invited<span className="text-royal-gold">You</span>
             </span>
             <span className="hidden sm:block text-[9px] uppercase tracking-widest text-gray-400 font-sans -mt-1">
-              Celebration Invitations
+              {t('common.brandTagline', 'Celebration Invitations')}
             </span>
           </div>
         </Link>
@@ -56,14 +59,14 @@ export const Navbar: React.FC = () => {
               pathname === '/templates' ? 'text-royal-gold font-semibold' : ''
             }`}
           >
-            Template Gallery
+            {t('nav.templates', 'Template Gallery')}
           </Link>
           <Link
             href="/templates?templateType=ANIMATED"
             className="flex items-center gap-1 text-royal-champagne hover:text-white transition-colors"
           >
             <Sparkles className="h-3.5 w-3.5 text-royal-gold animate-pulse" />
-            Animated Invitations
+            {t('nav.animatedInvites', 'Animated Invitations')}
           </Link>
           {user && (
             <Link
@@ -72,20 +75,23 @@ export const Navbar: React.FC = () => {
                 pathname === '/dashboard' ? 'text-royal-gold font-semibold' : ''
               }`}
             >
-              My Invitations
+              {t('nav.myInvitations', 'My Invitations')}
             </Link>
           )}
         </nav>
 
         {/* Right Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-3">
+          {/* Language Switcher */}
+          <LanguageSwitcher variant="nav" />
+
           <Link
             href="/editor"
             className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-gradient-to-r from-royal-gold to-royal-champagne px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all"
           >
             <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline sm:inline">Create</span>
-            <span className="hidden sm:inline"> Invitation</span>
+            <span>{t('nav.create', 'Create')}</span>
+            <span className="hidden sm:inline"> {t('common.brandTagline', 'Invitation')}</span>
           </Link>
 
           {user ? (
@@ -101,7 +107,7 @@ export const Navbar: React.FC = () => {
                 type="button"
                 onClick={handleLogout}
                 className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-                title="Log Out"
+                title={t('nav.logout', 'Sign Out')}
               >
                 <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
@@ -112,7 +118,7 @@ export const Navbar: React.FC = () => {
               className="flex items-center gap-1 sm:gap-1.5 rounded-full border border-white/20 bg-white/5 px-2.5 sm:px-3.5 py-1.5 text-xs text-white hover:bg-white/10 transition-colors"
             >
               <LogIn className="h-3.5 w-3.5" />
-              <span>Sign In</span>
+              <span>{t('nav.login', 'Sign In')}</span>
             </Link>
           )}
 
@@ -135,7 +141,7 @@ export const Navbar: React.FC = () => {
             href="/templates"
             className="flex items-center justify-between rounded-xl p-2.5 text-sm font-medium text-white hover:bg-white/10 transition-colors"
           >
-            <span>Browse Template Gallery</span>
+            <span>{t('nav.templates', 'Template Gallery')}</span>
             <span className="text-royal-gold">&rarr;</span>
           </Link>
           <Link
@@ -144,7 +150,7 @@ export const Navbar: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-royal-gold" />
-              <span>Animated Invitations</span>
+              <span>{t('nav.animatedInvites', 'Animated Invitations')}</span>
             </div>
             <span className="text-royal-gold">&rarr;</span>
           </Link>
@@ -152,7 +158,7 @@ export const Navbar: React.FC = () => {
             href="/editor"
             className="flex items-center justify-between rounded-xl p-2.5 text-sm font-medium text-white hover:bg-white/10 transition-colors"
           >
-            <span>Create Invitation Studio</span>
+            <span>{t('nav.createInvitation', 'Create Invitation')}</span>
             <span className="text-royal-gold">&rarr;</span>
           </Link>
           {user && (
@@ -160,10 +166,17 @@ export const Navbar: React.FC = () => {
               href="/dashboard"
               className="flex items-center justify-between rounded-xl p-2.5 text-sm font-medium text-white hover:bg-white/10 transition-colors"
             >
-              <span>My Dashboard & Invites</span>
+              <span>{t('nav.myInvitations', 'My Invitations')}</span>
               <span className="text-royal-gold">&rarr;</span>
             </Link>
           )}
+
+          <div className="pt-2 border-t border-white/10">
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">
+              Language / भाषा
+            </span>
+            <LanguageSwitcher variant="footer" />
+          </div>
         </div>
       )}
     </header>

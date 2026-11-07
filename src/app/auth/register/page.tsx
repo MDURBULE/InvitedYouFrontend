@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/api';
 import { Sparkles, ArrowRight, Lock, Mail, User, Phone } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const redirect = searchParams.get('redirect') || '/dashboard';
 
   const [firstName, setFirstName] = useState('');
@@ -48,9 +50,9 @@ function RegisterContent() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-royal-ruby to-royal-gold shadow-gold">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
-          <h1 className="font-serif text-2xl font-bold text-white">Create an Account</h1>
+          <h1 className="font-serif text-2xl font-bold text-white">{t('auth.registerTitle')}</h1>
           <p className="text-xs text-gray-400 font-sans">
-            Start creating impressive digital invitations for your guests.
+            {t('auth.registerSubtitle')}
           </p>
         </div>
 
@@ -64,7 +66,7 @@ function RegisterContent() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                First Name *
+                {t('auth.firstNameLabel')} *
               </label>
               <div className="relative">
                 <User className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
@@ -80,7 +82,7 @@ function RegisterContent() {
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-gray-300 uppercase tracking-wider mb-1">
-                Last Name
+                {t('auth.lastNameLabel')}
               </label>
               <input
                 type="text"
@@ -94,7 +96,7 @@ function RegisterContent() {
 
           <div>
             <label className="block text-[11px] font-semibold text-gray-300 uppercase tracking-wider mb-1">
-              Email Address *
+              {t('auth.emailLabel')} *
             </label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
@@ -111,7 +113,7 @@ function RegisterContent() {
 
           <div>
             <label className="block text-[11px] font-semibold text-gray-300 uppercase tracking-wider mb-1">
-              Phone / WhatsApp (Optional)
+              {t('auth.phoneLabel')}
             </label>
             <div className="relative">
               <Phone className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
@@ -127,7 +129,7 @@ function RegisterContent() {
 
           <div>
             <label className="block text-[11px] font-semibold text-gray-300 uppercase tracking-wider mb-1">
-              Password * (Min 6 chars)
+              {t('auth.passwordLabel')} *
             </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
@@ -146,32 +148,26 @@ function RegisterContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-royal-gold to-royal-champagne py-3 text-sm font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all mt-4"
+            className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-royal-gold via-royal-champagne to-royal-gold py-3 text-xs sm:text-sm font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all disabled:opacity-50 mt-4"
           >
-            <span>{loading ? 'Creating account...' : 'Create Account'}</span>
-            <ArrowRight className="h-4 w-4" />
+            {loading ? (
+              <span>{t('auth.signingUp')}</span>
+            ) : (
+              <>
+                <span>{t('auth.signUpBtn')}</span>
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </button>
-
-          <p className="text-[11px] text-gray-400 text-center font-sans leading-relaxed pt-1">
-            By signing up, you agree to our{' '}
-            <Link href="/terms" className="text-royal-champagne underline hover:text-white">
-              Terms &amp; Conditions
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-royal-champagne underline hover:text-white">
-              Privacy Policy
-            </Link>
-            .
-          </p>
         </form>
 
         <div className="text-center pt-2 border-t border-white/10 text-xs text-gray-400 font-sans">
-          Already have an account?{' '}
+          <span>{t('auth.haveAccount')} </span>
           <Link
-            href={`/auth/login${redirect ? `?redirect=${redirect}` : ''}`}
-            className="text-royal-gold font-semibold hover:underline"
+            href={`/auth/login?redirect=${encodeURIComponent(redirect)}`}
+            className="text-royal-champagne font-semibold hover:underline"
           >
-            Sign in
+            {t('auth.signInLink')}
           </Link>
         </div>
       </div>
@@ -181,7 +177,13 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-[85vh] items-center justify-center text-royal-champagne font-serif">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal-gold" />
+        </div>
+      }
+    >
       <RegisterContent />
     </Suspense>
   );

@@ -22,9 +22,11 @@ import {
   MapPin,
   CheckCircle,
 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function UserDashboardPage() {
   const router = useRouter();
+  const { t, locale, formatNumber } = useLanguage();
   const [invitations, setInvitations] = useState<InvitationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'DRAFT'>('ALL');
@@ -62,90 +64,75 @@ export default function UserDashboardPage() {
     const d = new Date(inv.eventDate);
     const now = new Date();
     return (
-      d.getFullYear() === now.getFullYear() &&
+      d.getDate() === now.getDate() &&
       d.getMonth() === now.getMonth() &&
-      d.getDate() === now.getDate()
+      d.getFullYear() === now.getFullYear()
     );
   };
+
+  const counts = useMemo(() => {
+    const all = invitations.length;
+    const completed = invitations.filter(isEventCompleted).length;
+    const active = invitations.filter((inv) => inv.status === 'PUBLISHED' && !isEventCompleted(inv)).length;
+    const draft = invitations.filter((inv) => inv.status === 'DRAFT').length;
+    return { all, completed, active, draft };
+  }, [invitations]);
 
   const filteredInvitations = useMemo(() => {
     return invitations.filter((inv) => {
       if (statusFilter === 'ALL') return true;
-      if (statusFilter === 'COMPLETED') return isEventCompleted(inv);
       if (statusFilter === 'ACTIVE') return inv.status === 'PUBLISHED' && !isEventCompleted(inv);
+      if (statusFilter === 'COMPLETED') return isEventCompleted(inv);
       if (statusFilter === 'DRAFT') return inv.status === 'DRAFT';
       return true;
     });
   }, [invitations, statusFilter]);
 
-  const counts = useMemo(() => {
-    return {
-      all: invitations.length,
-      active: invitations.filter((i) => i.status === 'PUBLISHED' && !isEventCompleted(i)).length,
-      completed: invitations.filter(isEventCompleted).length,
-      draft: invitations.filter((i) => i.status === 'DRAFT').length,
-    };
-  }, [invitations]);
-
-  const handleTogglePublish = async (inv: InvitationResponse) => {
-    try {
-      if (inv.status === 'PUBLISHED') {
-        const res = await invitationsApi.unpublishInvitation(inv.id);
-        setInvitations((prev) => prev.map((item) => (item.id === inv.id ? res : item)));
-      } else {
-        const res = await invitationsApi.publishInvitation(inv.id);
-        setInvitations((prev) => prev.map((item) => (item.id === inv.id ? res : item)));
-      }
-    } catch (e: any) {
-      alert(e.message || 'Failed to toggle publication status');
-    }
-  };
-
-  const handleDuplicate = async (id: number) => {
-    try {
-      const copy = await invitationsApi.duplicateInvitation(id);
-      setInvitations((prev) => [copy, ...prev]);
-    } catch (e: any) {
-      alert(e.message || 'Failed to duplicate invitation');
-    }
-  };
-
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this invitation?')) return;
+    if (!confirm(t('dashboard.confirmDelete'))) return;
     try {
       await invitationsApi.deleteInvitation(id);
-      setInvitations((prev) => prev.filter((item) => item.id !== id));
+      setInvitations((prev) => prev.filter((i) => i.id !== id));
     } catch (e: any) {
       alert(e.message || 'Failed to delete invitation');
     }
   };
 
+  const handleDuplicate = async (id: number) => {
+    try {
+      const duplicated = await invitationsApi.duplicateInvitation(id);
+      setInvitations((prev) => [duplicated, ...prev]);
+    } catch (e: any) {
+      alert(e.message || 'Failed to duplicate invitation');
+    }
+  };
+
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+    <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6 sm:space-y-8">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-royal-gold/20 pb-6">
         <div>
-          <span className="text-xs uppercase tracking-widest text-royal-gold font-serif font-semibold">
-            Host Dashboard
+          <span className="text-[10px] sm:text-xs font-serif uppercase tracking-widest text-royal-gold">
+            {t('nav.dashboard')}
           </span>
-          <h1 className="font-serif text-2xl sm:text-4xl font-bold text-white mt-0.5">
-            My Digital Invitations
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white mt-0.5">
+            {t('dashboard.welcome')}
           </h1>
           <p className="text-xs text-gray-400 font-sans mt-1">
-            Manage your celebration cards, view live guest pages, and review completed event keepsakes.
+            {t('dashboard.subtitle')}
           </p>
         </div>
 
         <Link
           href="/templates"
-          className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-royal-gold to-royal-champagne px-5 py-2.5 text-xs font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-royal-gold via-royal-champagne to-royal-gold px-5 py-2.5 text-xs font-bold text-royal-dark shadow-gold hover:opacity-95 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" />
-          <span>New Invitation</span>
+          <span>{t('dashboard.newInviteBtn')}</span>
         </Link>
       </div>
 
-      {/* Status Filter Tabs */}
+      {/* Filter Tabs */}
       {invitations.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           <button
@@ -157,7 +144,7 @@ export default function UserDashboardPage() {
                 : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
-            All Invitations ({counts.all})
+            {t('dashboard.filterAll')} ({counts.all})
           </button>
 
           <button
@@ -170,7 +157,7 @@ export default function UserDashboardPage() {
             }`}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <span>Active &amp; Live ({counts.active})</span>
+            <span>{t('dashboard.filterActive')} ({counts.active})</span>
           </button>
 
           <button
@@ -183,7 +170,7 @@ export default function UserDashboardPage() {
             }`}
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>Event Done ({counts.completed})</span>
+            <span>{t('dashboard.filterCompleted')} ({counts.completed})</span>
           </button>
 
           <button
@@ -195,7 +182,7 @@ export default function UserDashboardPage() {
                 : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
-            Drafts ({counts.draft})
+            {t('dashboard.filterDraft')} ({counts.draft})
           </button>
         </div>
       )}
@@ -203,29 +190,29 @@ export default function UserDashboardPage() {
       {/* Invitations List */}
       {loading ? (
         <div className="py-20 text-center text-royal-champagne font-serif animate-pulse">
-          Loading your invitations...
+          {t('common.loading')}
         </div>
       ) : invitations.length === 0 ? (
         <div className="rounded-3xl border border-white/10 bg-white/5 py-16 text-center space-y-4">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-royal-ruby/30 text-royal-gold border border-royal-gold/30">
             <Sparkles className="h-7 w-7" />
           </div>
-          <h3 className="font-serif text-xl font-bold text-white">No Invitations Created Yet</h3>
+          <h3 className="font-serif text-xl font-bold text-white">{t('dashboard.noInvitesYet')}</h3>
           <p className="text-xs text-gray-400 max-w-sm mx-auto font-sans">
-            Choose an animated template or traditional card to begin your first celebration invite.
+            {t('dashboard.createFirstInvite')}
           </p>
           <div className="pt-2">
             <Link
               href="/templates"
               className="inline-flex items-center gap-2 rounded-full bg-royal-gold px-6 py-2.5 text-xs font-bold text-royal-dark shadow-gold"
             >
-              <span>Browse Template Gallery</span>
+              <span>{t('templatesPage.title')}</span>
             </Link>
           </div>
         </div>
       ) : filteredInvitations.length === 0 ? (
         <div className="rounded-3xl border border-white/10 bg-white/5 py-12 text-center text-gray-400 text-xs">
-          No invitations matching the selected filter.
+          {t('templatesPage.noResults')}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -253,21 +240,21 @@ export default function UserDashboardPage() {
                     {completed ? (
                       <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
                         <CheckCircle2 className="h-3 w-3 text-amber-400" />
-                        <span>Event Done</span>
+                        <span>{t('dashboard.completedBadge')}</span>
                       </span>
                     ) : today ? (
                       <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-royal-gold/20 text-royal-champagne border border-royal-gold/40 flex items-center gap-1 animate-pulse">
                         <Sparkles className="h-3 w-3 text-royal-gold" />
-                        <span>Today!</span>
+                        <span>{t('dashboard.todayBadge')}</span>
                       </span>
                     ) : inv.status === 'PUBLISHED' ? (
                       <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>Active</span>
+                        <span>{t('dashboard.statusPublished')}</span>
                       </span>
                     ) : (
                       <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-white/10 text-gray-400 border border-white/10">
-                        Draft
+                        {t('dashboard.statusDraft')}
                       </span>
                     )}
                   </div>
@@ -287,36 +274,59 @@ export default function UserDashboardPage() {
                       <p className="flex items-center gap-1.5 text-gray-300">
                         <Calendar className="h-3.5 w-3.5 text-royal-gold" />
                         <span>
-                          {new Date(inv.eventDate).toLocaleDateString('en-US', {
+                          {new Date(inv.eventDate).toLocaleDateString(locale === 'mr' ? 'mr-IN' : locale === 'hi' ? 'hi-IN' : 'en-US', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',
                           })}
                         </span>
                         {completed && (
-                          <span className="text-[10px] text-amber-400/90 italic">(Concluded)</span>
+                          <span className="text-[10px] text-amber-400/90 italic">({t('dashboard.completedBadge')})</span>
                         )}
                       </p>
                     )}
+
                     {inv.venueName && (
                       <p className="flex items-center gap-1.5 line-clamp-1">
                         <MapPin className="h-3.5 w-3.5 text-royal-gold" />
                         <span>{inv.venueName}</span>
                       </p>
                     )}
-                    <p className="flex items-center gap-1.5">
-                      <Eye className="h-3.5 w-3.5 text-gray-400" />
-                      <span>{inv.viewsCount || 0} guest page views</span>
-                    </p>
+
+                    <div className="flex items-center justify-between pt-1 text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        <span>{inv.viewsCount || 0} {t('dashboard.viewsCount')}</span>
+                      </span>
+                      <span>v{inv.version}</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="pt-4 border-t border-white/10 space-y-2">
-                  {/* Share & Live Preview Bar for Published Cards */}
-                  {inv.status === 'PUBLISHED' && (
+                <div className="pt-2 border-t border-white/10 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href={`/editor?id=${inv.id}`}
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/5 py-2 text-xs font-semibold text-white hover:bg-white/10 transition-colors"
+                    >
+                      <Edit3 className="h-3.5 w-3.5 text-royal-gold" />
+                      <span>{t('dashboard.editBtn')}</span>
+                    </Link>
+
+                    <Link
+                      href={`/i/${inv.slug}`}
+                      target="_blank"
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-royal-gold/40 bg-royal-gold/10 py-2 text-xs font-semibold text-royal-champagne hover:bg-royal-gold/20 transition-colors"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 text-royal-gold" />
+                      <span>{t('dashboard.viewLiveBtn')}</span>
+                    </Link>
+                  </div>
+
+                  {/* Secondary Actions: Share across apps, Duplicate, Delete */}
+                  <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-2">
-                      {/* Universal Share Button (Includes Share across apps + QR code trigger) */}
                       <UniversalShareButton
                         title={inv.title}
                         honorees={inv.honorees}
@@ -324,53 +334,25 @@ export default function UserDashboardPage() {
                         venueName={inv.venueName}
                         eventDate={inv.eventDate}
                         variant="compact"
-                        className="flex-1"
                       />
 
-                      <Link
-                        href={`/i/${inv.slug}`}
-                        target="_blank"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                        title="Open Live Keepsake Page"
+                      <button
+                        type="button"
+                        onClick={() => handleDuplicate(inv.id)}
+                        className="flex h-8 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2.5 text-[11px] font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                        title={t('dashboard.duplicateBtn')}
                       >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </Link>
+                        <Copy className="h-3 w-3 text-royal-gold" />
+                        <span>{t('dashboard.duplicateBtn')}</span>
+                      </button>
                     </div>
-                  )}
-
-                  {/* Edit, Publish, Duplicate & Delete Row */}
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/editor?id=${inv.id}`}
-                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white py-2 text-xs font-medium transition-colors"
-                    >
-                      <Edit3 className="h-3.5 w-3.5" />
-                      <span>Edit</span>
-                    </Link>
-
-                    <button
-                      type="button"
-                      onClick={() => handleTogglePublish(inv)}
-                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-white/20 hover:border-white/40 text-gray-300 hover:text-white py-2 text-xs font-medium transition-colors"
-                    >
-                      <Globe className="h-3.5 w-3.5" />
-                      <span>{inv.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleDuplicate(inv.id)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/20 transition-colors"
-                      title="Duplicate Invitation"
-                    >
-                      <Copy className="h-3.5 w-3.5" />
-                    </button>
 
                     <button
                       type="button"
                       onClick={() => handleDelete(inv.id)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-red-400 hover:border-red-500/30 transition-colors"
-                      title="Delete Invitation"
+                      className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      title={t('dashboard.deleteBtn')}
+                      aria-label={t('dashboard.deleteBtn')}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

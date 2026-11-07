@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Calendar, Download, X, ExternalLink } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AddToCalendarModalProps {
   title: string;
@@ -20,6 +21,7 @@ export const AddToCalendarModal: React.FC<AddToCalendarModalProps> = ({
   venueAddress,
   description,
 }) => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
   if (!eventDate) return null;
@@ -86,7 +88,7 @@ export const AddToCalendarModal: React.FC<AddToCalendarModalProps> = ({
         className="flex items-center justify-center gap-2 rounded-xl border border-royal-gold/40 bg-royal-dark/90 px-4 py-2.5 text-xs font-semibold text-royal-champagne hover:bg-royal-dark transition-all shadow-md active:scale-95"
       >
         <Calendar className="h-4 w-4 text-royal-gold" />
-        Add to Calendar
+        <span>{t('calendar.addToCalendar')}</span>
       </button>
 
       {isOpen && (
@@ -100,6 +102,7 @@ export const AddToCalendarModal: React.FC<AddToCalendarModalProps> = ({
               type="button"
               onClick={() => setIsOpen(false)}
               className="absolute right-4 top-4 text-gray-400 hover:text-white"
+              aria-label={t('common.close')}
             >
               <X className="h-5 w-5" />
             </button>
@@ -109,8 +112,8 @@ export const AddToCalendarModal: React.FC<AddToCalendarModalProps> = ({
                 <Calendar className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-serif text-lg font-bold text-white">Save the Date</h3>
-                <p className="text-xs text-gray-400">Choose your calendar service</p>
+                <h3 className="font-serif text-lg font-bold text-white">{t('calendar.modalTitle')}</h3>
+                <p className="text-xs text-gray-400">{t('calendar.modalSubtitle')}</p>
               </div>
             </div>
 
@@ -122,7 +125,7 @@ export const AddToCalendarModal: React.FC<AddToCalendarModalProps> = ({
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3 text-xs font-medium text-white hover:bg-white/10 transition-colors"
               >
-                <span>Google Calendar</span>
+                <span>{t('calendar.googleCalendar')}</span>
                 <ExternalLink className="h-4 w-4 text-gray-400" />
               </a>
 
@@ -133,7 +136,7 @@ export const AddToCalendarModal: React.FC<AddToCalendarModalProps> = ({
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3 text-xs font-medium text-white hover:bg-white/10 transition-colors"
               >
-                <span>Microsoft Outlook</span>
+                <span>{t('calendar.outlookCalendar')}</span>
                 <ExternalLink className="h-4 w-4 text-gray-400" />
               </a>
 
@@ -145,7 +148,7 @@ export const AddToCalendarModal: React.FC<AddToCalendarModalProps> = ({
                 }}
                 className="flex w-full items-center justify-between rounded-xl border border-royal-gold/40 bg-royal-gold/15 p-3 text-xs font-medium text-royal-champagne hover:bg-royal-gold/25 transition-colors"
               >
-                <span>Apple Calendar & ICS File</span>
+                <span>{t('calendar.appleCalendar')}</span>
                 <Download className="h-4 w-4" />
               </button>
             </div>
